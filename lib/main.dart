@@ -1,37 +1,98 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 // Import your login pages
 import 'student_login.dart';
 import 'staff_login.dart';
+import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Make sure firebase_options.dart exists if needed
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
-  
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.system;
+
+  void _toggleTheme() {
+    setState(() {
+      if (_themeMode == ThemeMode.light) {
+        _themeMode = ThemeMode.dark;
+      } else if (_themeMode == ThemeMode.dark) {
+        _themeMode = ThemeMode.light;
+      } else {
+        _themeMode = ThemeMode.dark;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      // On web, show the menu page directly for preview/demo
+      return const HomeMenuPage();
+    }
     return MaterialApp(
       title: 'RIT GrubPoint',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        brightness: Brightness.light,
       ),
-      home: const EntryPoint(),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+      ),
+      themeMode: _themeMode,
+      home: EntryPoint(onToggleTheme: _toggleTheme),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class EntryPoint extends StatelessWidget {
-  const EntryPoint({super.key});
+  final VoidCallback? onToggleTheme;
+  const EntryPoint({super.key, this.onToggleTheme});
+
+  Future<Widget> _getHomePage(User user) async {
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final data = doc.data();
+      debugPrint('User Firestore data: {role: student, ...}');
+      if (data != null && data['role'] == 'staff') {
+        // return StaffHomePage(); // Uncomment if you have a StaffHomePage
+        return const HomeMenuPage();
+      }
+      if (data != null && data['role'] == 'student') {
+        return const HomeMenuPage();
+      }
+      // If no role or unknown role, show error
+      return Scaffold(
+        body: Center(
+          child: Text('No valid user role found. Please contact admin.'),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error in _getHomePage: $e');
+      return Scaffold(
+        body: Center(
+          child: Text('Error loading user data: $e'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +104,24 @@ class EntryPoint extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasData) {
-          // If already logged in, show student/staff home page
-          return const StudentHomePage(); // Replace with StaffHomePage if needed
+          return FutureBuilder<Widget>(
+            future: _getHomePage(snapshot.data!),
+            builder: (context, homeSnapshot) {
+              if (homeSnapshot.connectionState == ConnectionState.waiting) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
+                );
+              }
+              if (homeSnapshot.hasError) {
+                return Scaffold(
+                  body: Center(child: Text('Error: ${homeSnapshot.error}')),
+                );
+              }
+              return homeSnapshot.data!;
+            },
+          );
         } else {
-          return const WelcomePage();
+          return WelcomePage(onToggleTheme: onToggleTheme);
         }
       },
     );
@@ -54,16 +129,28 @@ class EntryPoint extends StatelessWidget {
 }
 
 class WelcomePage extends StatelessWidget {
-  const WelcomePage({super.key});
+  final VoidCallback? onToggleTheme;
+  const WelcomePage({super.key, this.onToggleTheme});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Welcome to RIT GrubPoint')),
+      appBar: AppBar(
+        title: const Text('Welcome to RIT GrubPoint'),
+        actions: [
+          IconButton(
+            icon: Icon(Theme.of(context).brightness == Brightness.dark ? Icons.light_mode : Icons.dark_mode),
+            onPressed: onToggleTheme,
+            tooltip: 'Toggle Theme',
+          ),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Image.asset('assets/LOGO.png', height: 100),
+            const SizedBox(height: 30),
             const Text('Welcome to RIT GrubPoint!', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 30),
             ElevatedButton(
@@ -173,6 +260,10 @@ class ProfileTab extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () async {
             await FirebaseAuth.instance.signOut();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Logged out successfully!')),
+            );
+            Navigator.of(context).popUntil((route) => route.isFirst);
           },
           child: const Text("Logout"),
         ),
@@ -180,3 +271,8 @@ class ProfileTab extends StatelessWidget {
     );
   }
 }
+
+// URL for local development
+const String url = """
+http://localhost:12345"""; // Corrected
+const String webRoot = "C:/Users/21070/Downloads/grubpoint/rit_grubpoint/grubpoint/RIT_GrubPoint";
