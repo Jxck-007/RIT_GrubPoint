@@ -104,6 +104,7 @@ class EntryPoint extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasData) {
+          print("Current user after login: ${FirebaseAuth.instance.currentUser}");
           return FutureBuilder<Widget>(
             future: _getHomePage(snapshot.data!),
             builder: (context, homeSnapshot) {
@@ -114,7 +115,7 @@ class EntryPoint extends StatelessWidget {
               }
               if (homeSnapshot.hasError) {
                 return Scaffold(
-                  body: Center(child: Text('Error: ${homeSnapshot.error}')),
+                  body: Center(child: Text('Error: \\${homeSnapshot.error}')),
                 );
               }
               return homeSnapshot.data!;
@@ -263,7 +264,7 @@ class ProfileTab extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Logged out successfully!')),
             );
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            Navigator.of(context).pop();
           },
           child: const Text("Logout"),
         ),

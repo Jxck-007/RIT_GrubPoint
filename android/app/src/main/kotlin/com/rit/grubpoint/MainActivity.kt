@@ -1,4 +1,4 @@
-package com.example.myapp
+package com.rit.grubpoint
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,8 +1,8 @@
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'home_page.dart';
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -17,42 +17,85 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
   bool _isLoading = false;
   String? _selectedYear;
 
-  Future<void> _signInWithGoogle() async {
+  Future<void> _loginWithRegNo() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
+      final user = FirebaseAuth.instance.currentUser;
+      print('Current user before Firestore write: \\${user?.uid}');
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
-          'email': user.email,
-          'displayName': user.displayName,
+          'regNo': _regNoController.text,
+          'year': _selectedYear,
           'role': 'student',
-          'loginMethod': 'google',
+          'loginMethod': 'regNo',
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        // Pop the login page so main.dart can rebuild and navigate
-        if (mounted) Navigator.of(context).pop();
+        print('Firestore write complete for user: \\${user.uid}');
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (mounted) {
+          Navigator.of(context).pop();
+          print('Login page popped.');
+        }
+      } else {
+        print('User is null after login!');
       }
-      // Show a smooth snackbar with animation
+      print('Current user after login: \\${FirebaseAuth.instance.currentUser}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Signed in successfully!'),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
-          duration: const Duration(seconds: 2),
-        ),
+        const SnackBar(content: Text('Login successful!')),
+
       );
+    } catch (e) {
+      print('Error in _loginWithRegNo: \\${e.toString()}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      if (kIsWeb) {
+        GoogleAuthProvider googleProvider = GoogleAuthProvider();
+        await FirebaseAuth.instance.signInWithRedirect(googleProvider);
+      } else {
+        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+        if (googleUser == null) return;
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+        final user = userCredential.user;
+        if (user != null) {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'uid': user.uid,
+            'email': user.email,
+            'displayName': user.displayName,
+            'role': 'student',
+            'loginMethod': 'google',
+            'lastLogin': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+          // Pop the login page to let StreamBuilder in main.dart handle navigation
+          if (mounted) Navigator.of(context).pop();
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Signed in successfully!'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } on FirebaseAuthException catch (e) {
       String message;
       switch (e.code) {
@@ -81,41 +124,6 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('An unexpected error occurred.'), backgroundColor: Colors.red),
       );
-    }
-  }
-
-  Future<void> _loginWithRegNo() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'uid': user.uid,
-          'regNo': _regNoController.text,
-          'year': _selectedYear,
-          'role': 'student',
-          'loginMethod': 'regNo',
-          'lastLogin': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-        // Wait for Firestore write to complete and propagate
-        await Future.delayed(const Duration(milliseconds: 400));
-        // Navigate to HomeMenuPage after successful login
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeMenuPage()),
-          );
-        }
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 

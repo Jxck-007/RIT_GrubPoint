@@ -39,10 +39,9 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
           'loginMethod': 'google',
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        // Pop the login page so main.dart can rebuild and navigate
+        // Pop the login page to let StreamBuilder in main.dart handle navigation
         if (mounted) Navigator.of(context).pop();
       }
-      // Show a smooth snackbar with animation
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Signed in successfully!'),
@@ -97,8 +96,13 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
           'loginMethod': 'staffId',
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        // Pop the login page so main.dart can rebuild and navigate
-        if (mounted) Navigator.of(context).pop();
+        // Wait for Firestore write to complete and propagate
+        await Future.delayed(const Duration(milliseconds: 400));
+        // Pop the login page to let StreamBuilder in main.dart handle navigation
+        if (mounted) {
+          Navigator.of(context).pop(
+        );
+        }
       }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login successful!')),
