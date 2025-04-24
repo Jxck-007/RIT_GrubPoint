@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'home_page.dart';
 
 class StudentLoginPage extends StatefulWidget {
   const StudentLoginPage({super.key});
@@ -35,8 +36,11 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
         print('Firestore write complete for user: \\${user.uid}');
         await Future.delayed(const Duration(milliseconds: 400));
         if (mounted) {
-          Navigator.of(context).pop();
-          print('Login page popped.');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeMenuPage()),
+          );
+          print('Navigated to HomePage.');
         }
       } else {
         print('User is null after login!');
@@ -84,7 +88,10 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
             'lastLogin': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
           // Pop the login page to let StreamBuilder in main.dart handle navigation
-          if (mounted) Navigator.of(context).pop();
+          if (mounted) Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeMenuPage()),
+          );
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

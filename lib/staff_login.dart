@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'home_page.dart';
 
 class StaffLoginPage extends StatefulWidget {
   const StaffLoginPage({super.key});
@@ -40,7 +41,10 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
         // Pop the login page to let StreamBuilder in main.dart handle navigation
-        if (mounted) Navigator.of(context).pop();
+        if (mounted) Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeMenuPage()),
+        );
       }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -100,8 +104,10 @@ class _StaffLoginPageState extends State<StaffLoginPage> {
         await Future.delayed(const Duration(milliseconds: 400));
         // Pop the login page to let StreamBuilder in main.dart handle navigation
         if (mounted) {
-          Navigator.of(context).pop(
-        );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomeMenuPage()),
+          );
         }
       }
       ScaffoldMessenger.of(context).showSnackBar(
