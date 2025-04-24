@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 // Import your login pages
 import 'student_login.dart';
-
 import 'home_page.dart';
 
 void main() async {
