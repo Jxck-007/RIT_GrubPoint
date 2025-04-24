@@ -1,4 +1,3 @@
-import 'package:lottie/lottie.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -24,7 +23,6 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
     setState(() => _isLoading = true);
     try {
       final user = FirebaseAuth.instance.currentUser;
-      print('Current user before Firestore write: \\${user?.uid}');
       if (user != null) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'uid': user.uid,
@@ -34,27 +32,24 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
           'loginMethod': 'regNo',
           'lastLogin': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
-        print('Firestore write complete for user: \\${user.uid}');
         await Future.delayed(const Duration(milliseconds: 400));
         if (mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomeMenuPage()),
           );
-          print('Navigated to HomePage.');
         }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Login successful!')),
+        );
       } else {
-        print('User is null after login!');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User is null after login!'), backgroundColor: Colors.red),
+        );
       }
-      print('Current user after login: \\${FirebaseAuth.instance.currentUser}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-
-      );
     } catch (e) {
-      print('Error in _loginWithRegNo: \\${e.toString()}');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        SnackBar(content: Text('Login failed: $e'), backgroundColor: Colors.red),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -69,14 +64,11 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
       } else {
         final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
         if (googleUser == null) return;
-
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-
         final credential = GoogleAuthProvider.credential(
           accessToken: googleAuth.accessToken,
           idToken: googleAuth.idToken,
         );
-
         final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
         final user = userCredential.user;
         if (user != null) {
@@ -88,21 +80,24 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
             'loginMethod': 'google',
             'lastLogin': FieldValue.serverTimestamp(),
           }, SetOptions(merge: true));
-          // Pop the login page to let StreamBuilder in main.dart handle navigation
           if (mounted) Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => HomeMenuPage()),
           );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Signed in successfully!'),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Google sign-in failed!'), backgroundColor: Colors.red),
+          );
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Signed in successfully!'),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 2),
-          ),
-        );
       }
     } on FirebaseAuthException catch (e) {
       String message;
@@ -130,7 +125,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An unexpected error occurred.'), backgroundColor: Colors.red),
+        SnackBar(content: Text('Google sign-in failed: $e'), backgroundColor: Colors.red),
       );
     }
   }
@@ -150,24 +145,26 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
               ]
             : null,
       ),
-      body: Container(
-        color: Colors.black,
-        child: Center(
+      body: Center(
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 1200),
+          curve: Curves.easeInOut,
+          builder: (context, value, child) {
+            return Opacity(
+              opacity: value,
+              child: Transform.scale(
+                scale: 0.7 + 0.3 * value,
+                child: child,
+              ),
+            );
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Combined liquid reveal animations
-              Lottie.asset(
-                'assets/liquid_reveal.lottie',
-                width: 220,
-                height: 180,
-                repeat: false,
-              ),
-              Lottie.asset(
-                'assets/liquid_reveal2.lottie',
-                width: 220,
-                height: 180,
-                repeat: false,
+              Hero(
+                tag: 'logo',
+                child: Image.asset('assets/LOGO.png', height: 120),
               ),
               const SizedBox(height: 20),
               AnimatedDefaultTextStyle(
@@ -262,6 +259,51 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                                 )
                               : const Text('Login'),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isLoading ? null : () async {
+                            // Show dialog to enter email for password reset
+                            final emailController = TextEditingController();
+                            await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Reset Password'),
+                                content: TextField(
+                                  controller: emailController,
+                                  decoration: const InputDecoration(hintText: 'Enter your email'),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      if (emailController.text.isNotEmpty) {
+                                        try {
+                                          await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text.trim());
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Password reset email sent!')),
+                                          );
+                                        } catch (e) {
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('Error: [0m$e')),
+                                          );
+                                        }
+                                      }
+                                    },
+                                    child: const Text('Send'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                          child: const Text('Forgot Password?'),
                         ),
                       ),
                     ],

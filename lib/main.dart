@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 // Import your login pages
 import 'student_login.dart';
+
 import 'home_page.dart';
 
 void main() async {
@@ -38,6 +39,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      // On web, show the menu page directly for preview/demo
+      return const HomeMenuPage();
+    }
     return MaterialApp(
       title: 'RIT GrubPoint',
       theme: ThemeData(
@@ -51,7 +56,7 @@ class _MyAppState extends State<MyApp> {
         brightness: Brightness.dark,
       ),
       themeMode: _themeMode,
-      home: StudentLoginPage(onToggleTheme: _toggleTheme),
+      home: EntryPoint(onToggleTheme: _toggleTheme),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -66,6 +71,10 @@ class EntryPoint extends StatelessWidget {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = doc.data();
       debugPrint('User Firestore data: {role: student, ...}');
+      if (data != null && data['role'] == 'staff') {
+        // return StaffHomePage(); // Uncomment if you have a StaffHomePage
+        return const HomeMenuPage();
+      }
       if (data != null && data['role'] == 'student') {
         return const HomeMenuPage();
       }
