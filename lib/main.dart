@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 
 // Import your login pages
 import 'student_login.dart';
-import 'staff_login.dart';
 import 'home_page.dart';
 
 void main() async {
@@ -39,10 +38,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb) {
-      // On web, show the menu page directly for preview/demo
-      return const HomeMenuPage();
-    }
     return MaterialApp(
       title: 'RIT GrubPoint',
       theme: ThemeData(
@@ -56,7 +51,7 @@ class _MyAppState extends State<MyApp> {
         brightness: Brightness.dark,
       ),
       themeMode: _themeMode,
-      home: EntryPoint(onToggleTheme: _toggleTheme),
+      home: StudentLoginPage(onToggleTheme: _toggleTheme),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -71,10 +66,6 @@ class EntryPoint extends StatelessWidget {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       final data = doc.data();
       debugPrint('User Firestore data: {role: student, ...}');
-      if (data != null && data['role'] == 'staff') {
-        // return StaffHomePage(); // Uncomment if you have a StaffHomePage
-        return const HomeMenuPage();
-      }
       if (data != null && data['role'] == 'student') {
         return const HomeMenuPage();
       }
@@ -164,18 +155,6 @@ class WelcomePage extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               ),
               child: const Text('Student Login'),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffLoginPage()));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              ),
-              child: const Text('Staff Login'),
             ),
           ],
         ),
