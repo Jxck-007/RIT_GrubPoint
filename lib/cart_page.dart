@@ -1,125 +1,218 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/cart_provider.dart';
+import 'models/menu_item.dart';
 
-class CartPage extends StatefulWidget {
-  final List<Map<String, dynamic>> cartItems;
-  const CartPage({required this.cartItems, super.key});
-
-  @override
-  State<CartPage> createState() => _CartPageState();
-}
-
-class _CartPageState extends State<CartPage> {
-  late List<Map<String, dynamic>> cartItems;
-  late List<int> quantities;
-
-  @override
-  void initState() {
-    super.initState();
-    cartItems = List<Map<String, dynamic>>.from(widget.cartItems);
-    quantities = List<int>.filled(cartItems.length, 1);
-  }
-
-  void _increment(int index) {
-    setState(() => quantities[index]++);
-  }
-
-  void _decrement(int index) {
-    if (quantities[index] > 1) {
-      setState(() => quantities[index]--);
-    }
-  }
-
-  void _remove(int index) {
-    setState(() {
-      cartItems.removeAt(index);
-      quantities.removeAt(index);
-    });
-  }
+class CartPage extends StatelessWidget {
+  const CartPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    double total = 0;
-    for (int i = 0; i < cartItems.length; i++) {
-      total += (cartItems[i]['price'] as num) * quantities[i];
-    }
-    return Scaffold(
-      appBar: AppBar(title: const Text('Cart')),
-      body: cartItems.isEmpty
-          ? const Center(child: Text('Your cart is empty'))
-          : ListView.builder(
-              itemCount: cartItems.length,
-              itemBuilder: (context, index) {
-                final item = cartItems[index];
-                return ListTile(
-                  leading: Image.asset(item['image'], width: 40, height: 40),
-                  title: Text(item['name']),
-                  subtitle: Text('₹${item['price']}'),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove_circle_outline),
-                        onPressed: () => _decrement(index),
-                      ),
-                      Text(quantities[index].toString(), style: const TextStyle(fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: const Icon(Icons.add_circle_outline),
-                        onPressed: () => _increment(index),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => _remove(index),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-      bottomNavigationBar: cartItems.isEmpty
-          ? null
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Total: ₹$total', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => PaymentPage(total: total)),
-                      );
-                    },
-                    child: const Text('Checkout'),
-                  ),
-                ],
+    return Consumer<CartProvider>(
+      builder: (context, cart, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Cart'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: cart.items.isEmpty ? null : () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Clear Cart'),
+                      content: const Text('Are you sure you want to clear your cart?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            cart.clearCart();
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Clear'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            ),
+            ],
+          ),
+          body: cart.items.isEmpty
+              ? const Center(child: Text('Your cart is empty'))
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: cart.items.length,
+                        itemBuilder: (context, index) {
+                          final cartItem = cart.items[index];
+                          return Dismissible(
+                            key: Key(cartItem.menuItem.id),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              color: Colors.red,
+                              child: const Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                            ),
+                            onDismissed: (direction) {
+                              cart.removeItem(cartItem.menuItem);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('${cartItem.menuItem.name} removed from cart'),
+                                  action: SnackBarAction(
+                                    label: 'Undo',
+                                    onPressed: () => cart.addItem(cartItem.menuItem),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: ListTile(
+                              leading: Image.asset(
+                                cartItem.menuItem.imagePath,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                              title: Text(cartItem.menuItem.name),
+                              subtitle: Text('₹${cartItem.menuItem.price.toStringAsFixed(2)}'),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    onPressed: () => cart.decreaseQuantity(cartItem.menuItem),
+                                  ),
+                                  Text(cartItem.quantity.toString()),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () => cart.increaseQuantity(cartItem.menuItem),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Total:',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '₹${cart.totalPrice.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                // TODO: Implement checkout
+                              },
+                              child: const Text('Checkout'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }
 
 class PaymentPage extends StatelessWidget {
   final double total;
+
   const PaymentPage({required this.total, super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Total to pay: ₹$total', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Order Summary',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Total Amount:'),
+                        Text(
+                          '₹${total.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: () {
-                // Payment logic here
+                // Implement payment logic here
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Payment successful!')),
+                  const SnackBar(
+                    content: Text('Payment successful!'),
+                    backgroundColor: Colors.green,
+                  ),
                 );
-                Navigator.pop(context);
+                context.read<CartProvider>().clearCart();
+                Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: const Text('Pay Now'),
             ),

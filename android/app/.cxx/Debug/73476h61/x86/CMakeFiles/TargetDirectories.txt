@@ -1,0 +1,2 @@
+C:/Users/21070/OneDrive/Desktop/grubpoint/RIT_GrubPoint/android/app/.cxx/Debug/73476h61/x86/CMakeFiles/edit_cache.dir
+C:/Users/21070/OneDrive/Desktop/grubpoint/RIT_GrubPoint/android/app/.cxx/Debug/73476h61/x86/CMakeFiles/rebuild_cache.dir

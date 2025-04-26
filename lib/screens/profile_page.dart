@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
   
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -97,7 +97,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 subtitle: Text("${order["date"]} - ${order["status"]}"),
                 trailing: Text(order["total"]!),
               ),
-            )).toList(),
+            )),
             const Divider(height: 32),
 
             Text("Payment Methods", 
@@ -110,7 +110,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 title: Text(method["type"]!),
                 subtitle: Text(method["details"]!),
               ),
-            )).toList(),
+            )),
             const Divider(height: 32),
 
             Center(

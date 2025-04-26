@@ -1,40 +1,41 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'models/menu_item.dart';
 
 class ItemPreviewPage extends StatelessWidget {
-  final Map<String, dynamic> item;
+  final MenuItem item;
   const ItemPreviewPage({required this.item, super.key});
 
-  String get itemId => item['name'].toString().replaceAll(' ', '_').toLowerCase();
+  String get itemId => item.name.replaceAll(' ', '_').toLowerCase();
 
   @override
   Widget build(BuildContext context) {
     final TextEditingController reviewController = TextEditingController();
     double userRating = 5.0;
     return Scaffold(
-      appBar: AppBar(title: Text(item['name'])),
+      appBar: AppBar(title: Text(item.name)),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: Image.asset(item['image'], fit: BoxFit.cover),
+            child: Image.asset(item.imagePath, fit: BoxFit.cover),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['name'], style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                Text(item.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.star, color: Colors.amber, size: 20),
                     const SizedBox(width: 4),
-                    Text(item['rating'].toString()),
+                    Text(item.rating.toString()),
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text('₹${item['price']}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {

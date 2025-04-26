@@ -3,6 +3,10 @@ import 'package:rit_grubpoint/cart_page.dart';
 import 'item_preview.dart';
 import 'gemini_chat_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'models/menu_item.dart';
+import 'providers/cart_provider.dart';
 
 class HomeMenuPage extends StatefulWidget {
   final VoidCallback? onToggleTheme;
@@ -11,214 +15,301 @@ class HomeMenuPage extends StatefulWidget {
   State<HomeMenuPage> createState() => _HomeMenuPageState();
 }
 
-class _HomeMenuPageState extends State<HomeMenuPage> {
+class _HomeMenuPageState extends State<HomeMenuPage> with SingleTickerProviderStateMixin {
   int _selectedTab = 0;
+  final ScrollController _scrollController = ScrollController();
+  double _imageOpacity = 1.0;
+  double _imageOffset = 0.0;
+  bool _isLoading = true;
+  late AnimationController _loadingController;
+  late Animation<double> _loadingAnimation;
   final List<String> categories = [
-    'Noodles',
-    'Pasta',
-    'Drink',
-    'Dessert',
-    'Breakfast',
-    'Lunch',
-    'Our Pick',
+    'Aaharam',
+    'Little Rangoon',
+    'The pacific Cafe',
+    'Cantina de Naples',
+    'Calcutta in a Box',
   ];
   final List<String> categoryImages = [
-    'assets/noodles.png',
-    'assets/pasta.png',
-    'assets/sodas.png',
-    'assets/dessert.png',
-    'assets/noodles.png', // Add new images for new categories as needed
-    'assets/pasta.png',
-    'assets/dessert.png',
+    'assets/Aaharam.png',
+    'assets/little Rangoon.png',
+    'assets/the pacific cafe.png',
+    'assets/Cantina de Naples.png',
+    'assets/calcutta in a Box.png',
   ];
   int selectedCategory = 0;
-  final List<Map<String, dynamic>> cartItems = [];
   String searchQuery = '';
   final Set<String> favoriteItems = {};
+  String? _error;
+  List<MenuItem> _menuItems = [];
 
-  final List<Map<String, dynamic>> menuItems = [
-    {
-      'name': 'Veg Noodles',
-      'image': 'assets/noodles.png',
-      'rating': 4.5,
-      'price': 60,
-      'category': 0,
-    },
-    {
-      'name': 'White Sauce Pasta',
-      'image': 'assets/pasta.png',
-      'rating': 4.2,
-      'price': 80,
-      'category': 1,
-    },
-    {
-      'name': 'Coke',
-      'image': 'assets/sodas.png',
-      'rating': 4.0,
-      'price': 30,
-      'category': 2,
-    },
-    {
-      'name': 'Chocolate Cake',
-      'image': 'assets/dessert.png',
-      'rating': 4.8,
-      'price': 50,
-      'category': 3,
-    },
-    {
-      'name': 'Masala Dosa',
-      'image': 'assets/noodles.png',
-      'rating': 4.7,
-      'price': 40,
-      'category': 4, // Breakfast
-    },
-    {
-      'name': 'Idli Sambar',
-      'image': 'assets/noodles.png',
-      'rating': 4.6,
-      'price': 30,
-      'category': 4, // Breakfast
-    },
-    {
-      'name': 'Paneer Butter Masala',
-      'image': 'assets/pasta.png',
-      'rating': 4.9,
-      'price': 120,
-      'category': 5, // Lunch
-    },
-    {
-      'name': 'Veg Biryani',
-      'image': 'assets/pasta.png',
-      'rating': 4.8,
-      'price': 100,
-      'category': 5, // Lunch
-    },
-    {
-      'name': 'Exclusive Brownie',
-      'image': 'assets/dessert.png',
-      'rating': 5.0,
-      'price': 70,
-      'category': 6, // Our Pick
-    },
-    {
-      'name': 'Exclusive Pizza',
-      'image': 'assets/dessert.png',
-      'rating': 4.95,
-      'price': 150,
-      'category': 6, // Our Pick
-    },
-    // Add more items as needed
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _loadingController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+    _loadingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _loadingController,
+        curve: Curves.easeInOut,
+      ),
+    );
+    _fetchMenuItems();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    _loadingController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {
+      _imageOpacity = (1 - _scrollController.offset / 200).clamp(0.0, 1.0);
+      _imageOffset = _scrollController.offset / 2;
+    });
+  }
+
+  Future<void> _fetchMenuItems() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+
+      final snapshot = await FirebaseFirestore.instance
+          .collection('menu_items')
+          .where('isAvailable', isEqualTo: true)
+          .get();
+
+      final items = snapshot.docs.map((doc) => 
+        MenuItem.fromFirestore(doc.data(), doc.id)
+      ).toList();
+
+      setState(() {
+        _menuItems = items;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Failed to load menu items. Please try again later.';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     Widget body;
     if (_selectedTab == 0) {
-      // Home tab: horizontal categories, vertical food list
-      body = Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: 0,
-                  child: Opacity(
-                    opacity: 0.18,
-                    child: Image.asset(
-                      'assets/ritcanteenphoto.png',
-                      fit: BoxFit.cover,
-                      height: 110,
+      body = _isLoading 
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  RotationTransition(
+                    turns: _loadingAnimation,
+                    child: const Icon(
+                      Icons.restaurant,
+                      size: 50,
+                      color: Colors.deepPurple,
                     ),
                   ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade100,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(Icons.fastfood, color: Colors.orange, size: 32),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Loading Menu...',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Provide the best\nfood for you',
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            // Extracted widget for the category selector
-            CategorySelector(
-              categories: categories,
-              categoryImages: categoryImages,
-              selectedCategory: selectedCategory,
-              onCategorySelected: (index) => setState(() => selectedCategory = index),
-            ),
-            const SizedBox(height: 8),
-            // Food cards with basic tap feedback
-            Expanded(
-              child: ListView.builder(
-                itemCount: menuItems.where((item) => item['category'] == selectedCategory).length,
-                itemBuilder: (context, idx) {
-                  final filtered = menuItems.where((item) => item['category'] == selectedCategory).toList();
-                  final item = filtered[idx];
-                  return FoodCard(
-                    item: item,
-                    isFavorite: favoriteItems.contains(item['name']),
-                    onTap: () async {
-                      final added = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ItemPreviewPage(item: item),
-                        ),
-                      );
-                      if (added == true) {
-                        setState(() => cartItems.add(item));
-                      }
-                    },
-                    onFavoriteToggle: () {
-                      setState(() {
-                        if (favoriteItems.contains(item['name'])) {
-                          favoriteItems.remove(item['name']);
-                        } else {
-                          favoriteItems.add(item['name']);
-                        }
-                      });
-                    },
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-      );
+            )
+          : _error != null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(_error!),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchMenuItems,
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 8),
+                            Stack(
+                              children: [
+                                Transform.translate(
+                                  offset: Offset(0, _imageOffset),
+                                  child: Opacity(
+                                    opacity: _imageOpacity,
+                                    child: Image.asset(
+                                      'assets/RITcanteenimage.png',
+                                      fit: BoxFit.cover,
+                                      height: 200,
+                                    ),
+                                  ),
+                                ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade100,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: const Icon(Icons.fastfood, color: Colors.orange, size: 32),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Your meal, your time \n No lines!',
+                                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.deepPurple,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+                            CategorySelector(
+                              categories: categories,
+                              categoryImages: categoryImages,
+                              selectedCategory: selectedCategory,
+                              onCategorySelected: (index) => setState(() => selectedCategory = index),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, idx) {
+                            final filtered = _menuItems.where((item) => item.category == selectedCategory).toList();
+                            if (idx >= filtered.length) return null;
+                            final item = filtered[idx];
+                            return FoodCard(
+                              item: item,
+                              isFavorite: favoriteItems.contains(item.name),
+                              onTap: () async {
+                                final added = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ItemPreviewPage(item: item),
+                                  ),
+                                );
+                                if (added == true) {
+                                  context.read<CartProvider>().addItem(item);
+                                }
+                              },
+                              onFavoriteToggle: () {
+                                setState(() {
+                                  if (favoriteItems.contains(item.name)) {
+                                    favoriteItems.remove(item.name);
+                                  } else {
+                                    favoriteItems.add(item.name);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
     } else if (_selectedTab == 1) {
-      // Cart tab
-      body = CartPage(cartItems: cartItems);
+      body = const CartPage();
     } else if (_selectedTab == 2) {
       body = GeminiChatPage();
     } else {
-      // Profile tab (placeholder)
-      body = const Center(child: Text('Profile Page'));
+      body = favoriteItems.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FadeTransition(
+                    opacity: _loadingAnimation,
+                    child: const Icon(
+                      Icons.favorite_border,
+                      size: 100,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No favorites yet',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              itemCount: favoriteItems.length,
+              itemBuilder: (context, index) {
+                final itemName = favoriteItems.elementAt(index);
+                final item = _menuItems.firstWhere((item) => item.name == itemName);
+                return FoodCard(
+                  item: item,
+                  isFavorite: true,
+                  onTap: () async {
+                    setState(() => _isLoading = true);
+                    final added = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ItemPreviewPage(item: item),
+                      ),
+                    );
+                    if (added == true) {
+                      context.read<CartProvider>().addItem(item);
+                    }
+                    setState(() => _isLoading = false);
+                  },
+                  onFavoriteToggle: () {
+                    setState(() => favoriteItems.remove(itemName));
+                  },
+                );
+              },
+            );
     }
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         actions: [
           IconButton(
             icon: Icon(Theme.of(context).brightness == Brightness.dark ? Icons.light_mode : Icons.dark_mode),
@@ -230,18 +321,86 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
             onPressed: () async {
               final result = await showSearch(
                 context: context,
-                delegate: FoodSearchDelegate(menuItems), // Search all items
+                delegate: FoodSearchDelegate(_menuItems),
               );
               if (result != null) {
                 setState(() => searchQuery = result);
               }
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.notifications_none, size: 28),
-            onPressed: () {},
-          ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Student Profile',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to profile page
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Orders History'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to orders history
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to settings
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.help),
+              title: const Text('Help & Support'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to help & support
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('About'),
+              onTap: () {
+                Navigator.pop(context);
+                // Navigate to about page
+              },
+            ),
+          ],
+        ),
       ),
       body: body,
       bottomNavigationBar: BottomNavigationBar(
@@ -249,19 +408,25 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
         selectedItemColor: Colors.deepPurple,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chat'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Cart',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
         ],
         onTap: (index) {
           setState(() => _selectedTab = index);
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.chat),
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => GeminiChatPage()));
         },
       ),
     );
@@ -269,7 +434,7 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
 }
 
 class FoodCard extends StatelessWidget {
-  final Map<String, dynamic> item;
+  final MenuItem item;
   final bool isFavorite;
   final VoidCallback onTap;
   final VoidCallback onFavoriteToggle;
@@ -292,10 +457,10 @@ class FoodCard extends StatelessWidget {
         onTap: onTap,
         child: ListTile(
           leading: Semantics(
-            label: item['name'] + ' image',
-            child: Image.asset(item['image'], width: 48, height: 48),
+            label: item.name + ' image',
+            child: Image.asset(item.imagePath, width: 48, height: 48),
           ),
-          title: Text(item['name'], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -303,10 +468,10 @@ class FoodCard extends StatelessWidget {
                 children: [
                   Icon(Icons.star, color: Colors.amber, size: 16),
                   const SizedBox(width: 4),
-                  Text(item['rating'].toString()),
+                  Text(item.rating.toString()),
                 ],
               ),
-              Text('₹${item['price']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
+              Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
             ],
           ),
           trailing: Semantics(
@@ -331,6 +496,7 @@ class CategorySelector extends StatelessWidget {
   final List<String> categoryImages;
   final int selectedCategory;
   final ValueChanged<int> onCategorySelected;
+  
   const CategorySelector({
     super.key,
     required this.categories,
@@ -338,41 +504,64 @@ class CategorySelector extends StatelessWidget {
     required this.selectedCategory,
     required this.onCategorySelected,
   });
+
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 90,
+    return Container(
+      height: 120,
+      margin: const EdgeInsets.symmetric(vertical: 8),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final isSelected = selectedCategory == index;
-          return Material(
-            color: isSelected ? Colors.deepPurple : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            child: InkWell(
+          return Container(
+            width: 100,
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+            child: Material(
+              color: isSelected ? Colors.deepPurple : Colors.white,
               borderRadius: BorderRadius.circular(20),
-              onTap: () => onCategorySelected(index),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Semantics(
-                      label: categories[index] + ' category',
-                      child: Image.asset(categoryImages[index], height: 32, width: 32),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      categories[index],
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.deepPurple,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => onCategorySelected(index),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(32),
+                          child: Image.asset(
+                            categoryImages[index],
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Text(
+                        categories[index],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : Colors.deepPurple,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -384,7 +573,7 @@ class CategorySelector extends StatelessWidget {
 }
 
 class FoodSearchDelegate extends SearchDelegate<String> {
-  final List<Map<String, dynamic>> menuItems;
+  final List<MenuItem> menuItems;
   FoodSearchDelegate(this.menuItems);
 
   @override
@@ -408,18 +597,35 @@ class FoodSearchDelegate extends SearchDelegate<String> {
   @override
   Widget buildSuggestions(BuildContext context) {
     final results = menuItems.where((item) =>
-        item['name'].toLowerCase().contains(query.toLowerCase()) ||
-        item['category'].toString().toLowerCase().contains(query.toLowerCase())
+        item.name.toLowerCase().contains(query.toLowerCase()) ||
+        item.category.toLowerCase().contains(query.toLowerCase())
     ).toList();
+    
     return ListView.builder(
       itemCount: results.length,
       itemBuilder: (context, index) {
         final item = results[index];
         return ListTile(
-          leading: Image.asset(item['image'], width: 40, height: 40),
-          title: Text(item['name']),
-          subtitle: Text('₹${item['price']}'),
-          onTap: () => close(context, item['name']),
+          leading: Image.asset(
+            item.imagePath,
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          ),
+          title: Text(item.name),
+          subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
+          onTap: () async {
+            final added = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ItemPreviewPage(item: item),
+              ),
+            );
+            if (added == true) {
+              context.read<CartProvider>().addItem(item);
+            }
+            close(context, item.name);
+          },
         );
       },
     );
