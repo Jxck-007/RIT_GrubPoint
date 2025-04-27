@@ -179,7 +179,7 @@ class MenuItemCard extends StatelessWidget {
                       action: SnackBarAction(
                         label: 'UNDO',
                         onPressed: () {
-                          cart.removeItem(item.id);
+                          cart.removeItem(item);
                         },
                       ),
                     ),

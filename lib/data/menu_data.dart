@@ -1,5 +1,13 @@
 import '../models/menu_item.dart';
 
+final Map<String, String> shopImages = {
+  'Calcutta in a Box': 'assets/shops/calcutta_in_a_box.jpg',
+  'Cantina de Naples': 'assets/shops/cantina_de_naples.jpg',
+  'Little Rangoon': 'assets/shops/little_rangoon.jpg',
+  'The Pacific Cafe': 'assets/shops/pacific_cafe.jpg',
+  'Aaharam': 'assets/shops/aaharam.jpg',
+};
+
 final List<MenuItem> demoMenuItems = [
   // Aaharam (South Indian)
   MenuItem(

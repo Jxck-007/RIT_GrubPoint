@@ -5,7 +5,6 @@ import '../providers/menu_provider.dart';
 import '../providers/cart_provider.dart';
 import '../data/menu_data.dart';
 import 'menu_screen.dart';
-import 'cart_screen.dart';
 
 class RestaurantListScreen extends StatelessWidget {
   const RestaurantListScreen({Key? key}) : super(key: key);
@@ -20,28 +19,12 @@ class RestaurantListScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('RIT GrubPoint'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const MenuScreen(),
-                ),
-              );
-            },
-          ),
           Stack(
             children: [
               IconButton(
                 icon: const Icon(Icons.shopping_cart),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CartScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, '/cart');
                 },
               ),
               if (cartProvider.itemCount > 0)
@@ -74,7 +57,6 @@ class RestaurantListScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // User welcome message
           if (user != null)
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -90,33 +72,67 @@ class RestaurantListScreen extends StatelessWidget {
                 ],
               ),
             ),
-          // Restaurant grid
           Expanded(
             child: GridView.builder(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 1,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
+                childAspectRatio: 0.9,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
               ),
               itemCount: restaurants.length,
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
-                final menuItems = getMenuItemsByRestaurant(restaurant);
-                
-                return RestaurantCard(
-                  name: restaurant,
-                  itemCount: menuItems.length,
+                final imageUrl = shopImages[restaurant] ?? '';
+                return GestureDetector(
                   onTap: () {
                     context.read<MenuProvider>().setSelectedRestaurant(restaurant);
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MenuScreen(),
+                        builder: (context) => MenuScreen(category: restaurant),
                       ),
                     );
                   },
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          child: imageUrl.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                  child: Image.asset(
+                                    imageUrl,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.restaurant, size: 48, color: Colors.white),
+                                ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(
+                            restaurant,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),
@@ -127,68 +143,51 @@ class RestaurantListScreen extends StatelessWidget {
   }
 }
 
-class RestaurantCard extends StatelessWidget {
-  final String name;
-  final int itemCount;
-  final VoidCallback onTap;
-
-  const RestaurantCard({
-    Key? key,
-    required this.name,
-    required this.itemCount,
-    required this.onTap,
-  }) : super(key: key);
+class ShopSelectionScreen extends StatelessWidget {
+  const ShopSelectionScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                color: Colors.grey[300],
-                child: const Icon(
-                  Icons.restaurant,
-                  size: 48,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$itemCount items',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+    final shopNames = shopImages.keys.toList();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Choose a Shop')),
+      body: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 1,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
         ),
+        itemCount: shopNames.length,
+        itemBuilder: (context, index) {
+          final shop = shopNames[index];
+          final imageUrl = shopImages[shop]!;
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MenuScreen(category: shop),
+                ),
+              );
+            },
+            child: Card(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: Image.asset(imageUrl, fit: BoxFit.cover),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(shop, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

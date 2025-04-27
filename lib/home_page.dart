@@ -10,6 +10,9 @@ import 'screens/reservation_screen.dart';
 import 'item_preview.dart';
 import 'cart_page.dart';
 import 'profile_page.dart';
+import 'providers/theme_provider.dart';
+import 'providers/favorites_provider.dart';
+import 'screens/favorites_screen.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -61,6 +64,7 @@ class HomeMenuPage extends StatefulWidget {
 
 class _HomeMenuPageState extends State<HomeMenuPage> {
   int _selectedIndex = 0;
+  String _searchQuery = '';
   
   // Sample menu items for now
   final List<MenuItem> _menuItems = [
@@ -108,10 +112,12 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     final List<Widget> _pages = [
       _buildMenuPage(),
       const CartPage(),
-      const ProfilePage(),
+      const FavoritesScreen(),
       const NotificationsScreen(),
     ];
 
@@ -120,6 +126,15 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
         title: const Text('RIT GrubPoint'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         actions: [
+          IconButton(
+            icon: Icon(
+              themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+            ),
+            onPressed: () {
+              themeProvider.toggleTheme();
+            },
+            tooltip: 'Toggle Theme',
+          ),
           IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
@@ -133,8 +148,10 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex < 3 ? _selectedIndex : 0, // Keep bottom nav selection in range
+        currentIndex: _selectedIndex,
         selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
         onTap: (index) {
           setState(() {
             _selectedIndex = index;
@@ -142,16 +159,20 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant_menu),
-            label: 'Menu',
+            icon: Icon(Icons.home),
+            label: 'Home',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Notifications',
           ),
         ],
       ),
@@ -226,13 +247,37 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
   }
 
   Widget _buildMenuPage() {
-    // Filter items based on selected category
-    final filteredItems = _selectedCategory == 'All'
-        ? _menuItems
-        : _menuItems.where((item) => item.category == _selectedCategory).toList();
+    // Filter items based on selected category and search query
+    final filteredItems = _menuItems.where((item) {
+      final matchesCategory = _selectedCategory == 'All' || item.category == _selectedCategory;
+      final matchesSearch = _searchQuery.isEmpty || 
+          item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }).toList();
 
     return Column(
       children: [
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: TextField(
+            decoration: InputDecoration(
+              hintText: 'Search food items...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              filled: true,
+              fillColor: Colors.grey[100],
+            ),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value;
+              });
+            },
+          ),
+        ),
         // Category filter chips
         Container(
           height: 50,
@@ -283,17 +328,43 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
           SizedBox(
             height: 180,
             width: double.infinity,
-            child: Image.network(
-              item.imageUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Text('Image not available'),
+            child: Stack(
+              children: [
+                Image.network(
+                  item.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Text('Image not available'),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Consumer<FavoritesProvider>(
+                    builder: (context, favoritesProvider, child) {
+                      final isFavorite = favoritesProvider.isFavorite(item);
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.grey,
+                          ),
+                          onPressed: () => favoritesProvider.toggleFavorite(item),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
           
@@ -340,7 +411,7 @@ class _HomeMenuPageState extends State<HomeMenuPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '\$${item.price.toStringAsFixed(2)}',
+                      '₹${item.price.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -443,71 +514,75 @@ class MenuItemCard extends StatelessWidget {
 
 class FoodCard extends StatelessWidget {
   final MenuItem item;
-  final bool isFavorite;
   final VoidCallback onTap;
-  final VoidCallback onFavoriteToggle;
+  
   const FoodCard({
     super.key,
     required this.item,
-    required this.isFavorite,
     required this.onTap,
-    required this.onFavoriteToggle,
   });
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      color: Colors.white,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: ListTile(
-          leading: Semantics(
-            label: '${item.name} image',
-            child: Image.network(
-              item.imageUrl,
-              width: 48,
-              height: 48,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
+    return Consumer<FavoritesProvider>(
+      builder: (context, favoritesProvider, child) {
+        final isFavorite = favoritesProvider.isFavorite(item);
+        
+        return Card(
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          elevation: 4,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          color: Colors.white,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: onTap,
+            child: ListTile(
+              leading: Semantics(
+                label: '${item.name} image',
+                child: Image.network(
+                  item.imageUrl,
                   width: 48,
                   height: 48,
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.restaurant),
-                );
-              },
-            ),
-          ),
-          title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      width: 48,
+                      height: 48,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.restaurant),
+                    );
+                  },
+                ),
+              ),
+              title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 16),
-                  const SizedBox(width: 4),
-                  Text(item.rating.toStringAsFixed(1)),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(item.rating.toStringAsFixed(1)),
+                    ],
+                  ),
+                  Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
                 ],
               ),
-              Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
-            ],
-          ),
-          trailing: Semantics(
-            label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
-            button: true,
-            child: IconButton(
-              icon: Icon(
-                isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? Colors.red : Colors.deepPurple,
+              trailing: Semantics(
+                label: isFavorite ? 'Remove from favorites' : 'Add to favorites',
+                button: true,
+                child: IconButton(
+                  icon: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.red : Colors.deepPurple,
+                  ),
+                  onPressed: () => favoritesProvider.toggleFavorite(item),
+                ),
               ),
-              onPressed: onFavoriteToggle,
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -743,4 +818,5 @@ class ProfileTab extends StatelessWidget {
       ],
     );
   }
+  
 }
