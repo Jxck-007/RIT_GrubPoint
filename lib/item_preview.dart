@@ -18,7 +18,16 @@ class ItemPreviewPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(
-            child: Image.asset(item.imagePath, fit: BoxFit.cover),
+            child: Image.network(
+              item.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.restaurant, size: 100),
+                );
+              },
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -27,22 +36,33 @@ class ItemPreviewPage extends StatelessWidget {
               children: [
                 Text(item.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
+                Text(
+                  item.description,
+                  style: const TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber, size: 20),
+                    const Icon(Icons.star, color: Colors.amber, size: 20),
                     const SizedBox(width: 4),
-                    Text(item.rating.toString()),
+                    Text(item.rating.toStringAsFixed(1)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
-                  child: const Text('Add to Cart'),
-                ),
+                if (item.isAvailable)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: const Text('Add to Cart'),
+                  )
+                else
+                  const Text(
+                    'Currently Not Available',
+                    style: TextStyle(color: Colors.red, fontSize: 16),
+                  ),
                 const SizedBox(height: 24),
                 Text('Reviews', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
@@ -68,7 +88,7 @@ class ItemPreviewPage extends StatelessWidget {
                         itemBuilder: (context, i) {
                           final data = docs[i].data() as Map<String, dynamic>;
                           return ListTile(
-                            leading: Icon(Icons.star, color: Colors.amber, size: 18),
+                            leading: const Icon(Icons.star, color: Colors.amber, size: 18),
                             title: Text(data['review'] ?? ''),
                             subtitle: Text('Rating: ${data['rating'] ?? 0}'),
                           );
@@ -80,7 +100,7 @@ class ItemPreviewPage extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Text('Your Rating: '),
+                    const Text('Your Rating: '),
                     StatefulBuilder(
                       builder: (context, setState) => Row(
                         children: List.generate(5, (index) => IconButton(
