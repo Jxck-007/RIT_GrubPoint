@@ -6,8 +6,8 @@ class ReservationScreen extends StatefulWidget {
 
   const ReservationScreen({
     Key? key,
-    required this.restaurantId,
-    required this.restaurantName,
+    this.restaurantId = 'my-reservations',
+    this.restaurantName = 'My Reservations',
   }) : super(key: key);
 
   @override

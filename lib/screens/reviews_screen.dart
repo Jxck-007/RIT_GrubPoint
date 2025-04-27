@@ -6,8 +6,8 @@ class ReviewsScreen extends StatefulWidget {
 
   const ReviewsScreen({
     Key? key,
-    required this.restaurantId,
-    required this.restaurantName,
+    this.restaurantId = 'my-reviews',
+    this.restaurantName = 'My Reviews',
   }) : super(key: key);
 
   @override
