@@ -1,433 +1,441 @@
 import 'package:flutter/material.dart';
-import 'package:rit_grubpoint/cart_page.dart';
-import 'item_preview.dart';
-import 'gemini_chat_page.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'models/menu_item.dart';
 import 'providers/cart_provider.dart';
+import 'screens/menu_screen.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/reviews_screen.dart';
+import 'screens/reservation_screen.dart';
+import 'item_preview.dart';
+import 'cart_page.dart';
+import 'profile_page.dart';
 
-class HomeMenuPage extends StatefulWidget {
-  final VoidCallback? onToggleTheme;
-  const HomeMenuPage({super.key, this.onToggleTheme});
-  @override
-  State<HomeMenuPage> createState() => _HomeMenuPageState();
-}
-
-class _HomeMenuPageState extends State<HomeMenuPage> with SingleTickerProviderStateMixin {
-  int _selectedTab = 0;
-  final ScrollController _scrollController = ScrollController();
-  double _imageOpacity = 1.0;
-  double _imageOffset = 0.0;
-  bool _isLoading = true;
-  late AnimationController _loadingController;
-  late Animation<double> _loadingAnimation;
-  final List<String> categories = [
-    'Aaharam',
-    'Little Rangoon',
-    'The pacific Cafe',
-    'Cantina de Naples',
-    'Calcutta in a Box',
-  ];
-  final List<String> categoryImages = [
-    'assets/Aaharam.png',
-    'assets/little Rangoon.png',
-    'assets/the pacific cafe.png',
-    'assets/Cantina de Naples.png',
-    'assets/calcutta in a Box.png',
-  ];
-  int selectedCategory = 0;
-  String searchQuery = '';
-  final Set<String> favoriteItems = {};
-  String? _error;
-  List<MenuItem> _menuItems = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(_onScroll);
-    _loadingController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-    _loadingAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _loadingController,
-        curve: Curves.easeInOut,
-      ),
-    );
-    _fetchMenuItems();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.removeListener(_onScroll);
-    _scrollController.dispose();
-    _loadingController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    setState(() {
-      _imageOpacity = (1 - _scrollController.offset / 200).clamp(0.0, 1.0);
-      _imageOffset = _scrollController.offset / 2;
-    });
-  }
-
-  Future<void> _fetchMenuItems() async {
-    try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-
-      final snapshot = await FirebaseFirestore.instance
-          .collection('menu_items')
-          .where('isAvailable', isEqualTo: true)
-          .get();
-
-      final items = snapshot.docs.map((doc) => 
-        MenuItem.fromFirestore(doc.data(), doc.id)
-      ).toList();
-
-      setState(() {
-        _menuItems = items;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to load menu items. Please try again later.';
-        _isLoading = false;
-      });
-    }
-  }
+class HomePage extends StatelessWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    Widget body;
-    if (_selectedTab == 0) {
-      body = _isLoading 
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  RotationTransition(
-                    turns: _loadingAnimation,
-                    child: const Icon(
-                      Icons.restaurant,
-                      size: 50,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Loading Menu...',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchMenuItems,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    slivers: [
-                      SliverToBoxAdapter(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 8),
-                            Stack(
-                              children: [
-                                Transform.translate(
-                                  offset: Offset(0, _imageOffset),
-                                  child: Opacity(
-                                    opacity: _imageOpacity,
-                                    child: Image.asset(
-                                      'assets/RITcanteenimage.png',
-                                      fit: BoxFit.cover,
-                                      height: 200,
-                                    ),
-                                  ),
-                                ),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.shade100,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: const Icon(Icons.fastfood, color: Colors.orange, size: 32),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        'Your meal, your time \n No lines!',
-                                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.deepPurple,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 18),
-                            CategorySelector(
-                              categories: categories,
-                              categoryImages: categoryImages,
-                              selectedCategory: selectedCategory,
-                              onCategorySelected: (index) => setState(() => selectedCategory = index),
-                            ),
-                          ],
-                        ),
-                      ),
-                      SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, idx) {
-                            final filtered = _menuItems.where((item) => item.category == selectedCategory).toList();
-                            if (idx >= filtered.length) return null;
-                            final item = filtered[idx];
-                            return FoodCard(
-                              item: item,
-                              isFavorite: favoriteItems.contains(item.name),
-                              onTap: () async {
-                                final added = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ItemPreviewPage(item: item),
-                                  ),
-                                );
-                                if (added == true) {
-                                  context.read<CartProvider>().addItem(item);
-                                }
-                              },
-                              onFavoriteToggle: () {
-                                setState(() {
-                                  if (favoriteItems.contains(item.name)) {
-                                    favoriteItems.remove(item.name);
-                                  } else {
-                                    favoriteItems.add(item.name);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-    } else if (_selectedTab == 1) {
-      body = const CartPage();
-    } else if (_selectedTab == 2) {
-      body = GeminiChatPage();
-    } else {
-      body = favoriteItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  FadeTransition(
-                    opacity: _loadingAnimation,
-                    child: const Icon(
-                      Icons.favorite_border,
-                      size: 100,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No favorites yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.deepPurple,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              itemCount: favoriteItems.length,
-              itemBuilder: (context, index) {
-                final itemName = favoriteItems.elementAt(index);
-                final item = _menuItems.firstWhere((item) => item.name == itemName);
-                return FoodCard(
-                  item: item,
-                  isFavorite: true,
-                  onTap: () async {
-                    setState(() => _isLoading = true);
-                    final added = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ItemPreviewPage(item: item),
-                      ),
-                    );
-                    if (added == true) {
-                      context.read<CartProvider>().addItem(item);
-                    }
-                    setState(() => _isLoading = false);
-                  },
-                  onFavoriteToggle: () {
-                    setState(() => favoriteItems.remove(itemName));
-                  },
-                );
-              },
-            );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Theme.of(context).brightness == Brightness.dark ? Icons.light_mode : Icons.dark_mode),
-            onPressed: widget.onToggleTheme,
-            tooltip: 'Toggle Theme',
-          ),
-          IconButton(
-            icon: const Icon(Icons.search, size: 28),
-            onPressed: () async {
-              final result = await showSearch(
-                context: context,
-                delegate: FoodSearchDelegate(_menuItems),
-              );
-              if (result != null) {
-                setState(() => searchQuery = result);
-              }
-            },
-          ),
-        ],
+        title: const Text('GrubPoint'),
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 40, color: Colors.deepPurple),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Student Profile',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            Icon(
+              Icons.restaurant_menu,
+              size: 100,
+              color: Colors.orange,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Welcome to GrubPoint!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to profile page
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Orders History'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to orders history
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to settings
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help),
-              title: const Text('Help & Support'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to help & support
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to about page
-              },
+            SizedBox(height: 8),
+            Text(
+              'Your favorite food, delivered.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
             ),
           ],
         ),
       ),
-      body: body,
+    );
+  }
+}
+
+class HomeMenuPage extends StatefulWidget {
+  const HomeMenuPage({super.key});
+
+  @override
+  State<HomeMenuPage> createState() => _HomeMenuPageState();
+}
+
+class _HomeMenuPageState extends State<HomeMenuPage> {
+  int _selectedIndex = 0;
+  
+  // Sample menu items for now
+  final List<MenuItem> _menuItems = [
+    MenuItem(
+      id: 1,
+      name: 'Margherita Pizza',
+      description: 'Classic cheese pizza with tomato sauce',
+      price: 12.99,
+      imageUrl: 'https://via.placeholder.com/150',
+      category: 'Pizza',
+      rating: 4.5,
+    ),
+    MenuItem(
+      id: 2,
+      name: 'Chicken Burger',
+      description: 'Grilled chicken burger with lettuce and mayo',
+      price: 8.99,
+      imageUrl: 'https://via.placeholder.com/150',
+      category: 'Burger',
+      rating: 4.2,
+    ),
+    MenuItem(
+      id: 3,
+      name: 'Caesar Salad',
+      description: 'Fresh salad with chicken and caesar dressing',
+      price: 7.49,
+      imageUrl: 'https://via.placeholder.com/150',
+      category: 'Salad',
+      rating: 4.0,
+    ),
+    MenuItem(
+      id: 4,
+      name: 'Chocolate Milkshake',
+      description: 'Rich and creamy chocolate milkshake',
+      price: 4.99,
+      imageUrl: 'https://via.placeholder.com/150',
+      category: 'Beverage',
+      rating: 4.8,
+    ),
+  ];
+
+  // Filter categories
+  final List<String> _categories = ['All', 'Pizza', 'Burger', 'Salad', 'Beverage'];
+  String _selectedCategory = 'All';
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> _pages = [
+      _buildMenuPage(),
+      const CartPage(),
+      const ProfilePage(),
+      const NotificationsScreen(),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('RIT GrubPoint'),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              setState(() {
+                _selectedIndex = 3;
+              });
+            },
+            tooltip: 'Notifications',
+          ),
+        ],
+      ),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedTab,
+        currentIndex: _selectedIndex < 3 ? _selectedIndex : 0, // Keep bottom nav selection in range
         selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.restaurant_menu),
+            label: 'Menu',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
+            icon: Icon(Icons.person),
+            label: 'Profile',
           ),
         ],
-        onTap: (index) {
-          setState(() => _selectedTab = index);
-        },
+      ),
+      floatingActionButton: _selectedIndex == 0 
+          ? FloatingActionButton(
+              onPressed: () {
+                _showRestaurantOptions(context);
+              },
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.more_horiz, color: Colors.white),
+            ) 
+          : null,
+    );
+  }
+
+  void _showRestaurantOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.restaurant_menu),
+              title: const Text('View Menu'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MenuScreen(category: 'All'),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.calendar_today),
+              title: const Text('Make Reservation'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReservationScreen(
+                      restaurantId: 'sample-id',
+                      restaurantName: 'Crossroads Cafe',
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.star),
+              title: const Text('Reviews'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReviewsScreen(
+                      restaurantId: 'sample-id',
+                      restaurantName: 'Crossroads Cafe',
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMenuPage() {
+    // Filter items based on selected category
+    final filteredItems = _selectedCategory == 'All'
+        ? _menuItems
+        : _menuItems.where((item) => item.category == _selectedCategory).toList();
+
+    return Column(
+      children: [
+        // Category filter chips
+        Container(
+          height: 50,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: _categories.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilterChip(
+                  label: Text(_categories[index]),
+                  selected: _selectedCategory == _categories[index],
+                  onSelected: (selected) {
+                    setState(() {
+                      _selectedCategory = _categories[index];
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        
+        // Menu items
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: filteredItems.length,
+            itemBuilder: (context, index) {
+              final item = filteredItems[index];
+              return _buildMenuItem(item);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem(MenuItem item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Food image
+          SizedBox(
+            height: 180,
+            width: double.infinity,
+            child: Image.network(
+              item.imageUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey[300],
+                  child: const Center(
+                    child: Text('Image not available'),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name and rating
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${item.rating}'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                
+                // Description
+                Text(
+                  item.description,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                
+                // Price and add to cart button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '\$${item.price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    Consumer<CartProvider>(
+                      builder: (context, cart, child) {
+                        return ElevatedButton.icon(
+                          icon: const Icon(Icons.add_shopping_cart),
+                          label: const Text('Add to Cart'),
+                          onPressed: () {
+                            cart.addItem(item);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${item.name} added to cart'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MenuItemCard extends StatelessWidget {
+  final MenuItem item;
+  final VoidCallback onTap;
+
+  const MenuItemCard({
+    Key? key,
+    required this.item,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
+              item.imageUrl,
+              height: 120,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${item.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -457,8 +465,21 @@ class FoodCard extends StatelessWidget {
         onTap: onTap,
         child: ListTile(
           leading: Semantics(
-            label: item.name + ' image',
-            child: Image.asset(item.imagePath, width: 48, height: 48),
+            label: '${item.name} image',
+            child: Image.network(
+              item.imageUrl,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 48,
+                  height: 48,
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.restaurant),
+                );
+              },
+            ),
           ),
           title: Text(item.name, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.deepPurple)),
           subtitle: Column(
@@ -466,9 +487,9 @@ class FoodCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.star, color: Colors.amber, size: 16),
+                  const Icon(Icons.star, color: Colors.amber, size: 16),
                   const SizedBox(width: 4),
-                  Text(item.rating.toString()),
+                  Text(item.rating.toStringAsFixed(1)),
                 ],
               ),
               Text('₹${item.price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.purple)),
@@ -606,11 +627,19 @@ class FoodSearchDelegate extends SearchDelegate<String> {
       itemBuilder: (context, index) {
         final item = results[index];
         return ListTile(
-          leading: Image.asset(
-            item.imagePath,
+          leading: Image.network(
+            item.imageUrl,
             width: 50,
             height: 50,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 50,
+                height: 50,
+                color: Colors.grey[300],
+                child: const Icon(Icons.restaurant),
+              );
+            },
           ),
           title: Text(item.name),
           subtitle: Text('₹${item.price.toStringAsFixed(2)}'),

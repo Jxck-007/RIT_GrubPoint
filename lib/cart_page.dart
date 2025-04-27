@@ -8,213 +8,269 @@ class CartPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<CartProvider>(
-      builder: (context, cart, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Cart'),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: cart.items.isEmpty ? null : () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Clear Cart'),
-                      content: const Text('Are you sure you want to clear your cart?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            cart.clearCart();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Clear'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
+    return Scaffold(
+      body: Consumer<CartProvider>(
+        builder: (context, cart, child) {
+          if (cart.items.isEmpty) {
+            return const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 100,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Your cart is empty',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Add some items to get started',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
               ),
-            ],
-          ),
-          body: cart.items.isEmpty
-              ? const Center(child: Text('Your cart is empty'))
-              : Column(
-                  children: [
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: cart.items.length,
-                        itemBuilder: (context, index) {
-                          final cartItem = cart.items[index];
-                          return Dismissible(
-                            key: Key(cartItem.menuItem.id),
-                            direction: DismissDirection.endToStart,
-                            background: Container(
-                              alignment: Alignment.centerRight,
-                              padding: const EdgeInsets.only(right: 20),
-                              color: Colors.red,
-                              child: const Icon(
-                                Icons.delete,
-                                color: Colors.white,
-                              ),
-                            ),
-                            onDismissed: (direction) {
-                              cart.removeItem(cartItem.menuItem);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${cartItem.menuItem.name} removed from cart'),
-                                  action: SnackBarAction(
-                                    label: 'Undo',
-                                    onPressed: () => cart.addItem(cartItem.menuItem),
-                                  ),
-                                ),
-                              );
-                            },
-                            child: ListTile(
-                              leading: Image.asset(
-                                cartItem.menuItem.imagePath,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                              title: Text(cartItem.menuItem.name),
-                              subtitle: Text('₹${cartItem.menuItem.price.toStringAsFixed(2)}'),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.remove),
-                                    onPressed: () => cart.decreaseQuantity(cartItem.menuItem),
-                                  ),
-                                  Text(cartItem.quantity.toString()),
-                                  IconButton(
-                                    icon: const Icon(Icons.add),
-                                    onPressed: () => cart.increaseQuantity(cartItem.menuItem),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'Total:',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                '₹${cart.totalPrice.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // TODO: Implement checkout
-                              },
-                              child: const Text('Checkout'),
-                            ),
-                          ),
-                        ],
-                      ),
+            );
+          }
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cart.items.length,
+                  itemBuilder: (context, index) {
+                    final item = cart.items.values.toList()[index];
+                    return CartItemCard(item: item);
+                  },
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.2),
+                      spreadRadius: 1,
+                      blurRadius: 5,
+                      offset: const Offset(0, -2),
                     ),
                   ],
                 ),
-        );
-      },
-    );
-  }
-}
-
-class PaymentPage extends StatelessWidget {
-  final double total;
-
-  const PaymentPage({required this.total, super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const Text(
-                      'Order Summary',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Total Amount:'),
+                        const Text(
+                          'Subtotal:',
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
                         Text(
-                          '₹${total.toStringAsFixed(2)}',
+                          '\$${cart.totalAmount.toStringAsFixed(2)}',
                           style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Delivery Fee:',
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          cart.totalAmount > 0 ? '\$2.00' : '\$0.00',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total:',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '\$${(cart.totalAmount + (cart.totalAmount > 0 ? 2.0 : 0.0)).toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.green,
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Checkout functionality coming soon!'),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.deepPurple,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text(
+                          'Checkout',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () {
+                        cart.clear();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Cart cleared'),
+                          ),
+                        );
+                      },
+                      child: const Text('Clear Cart'),
+                    ),
                   ],
                 ),
               ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class CartItemCard extends StatelessWidget {
+  final MenuItem item;
+
+  const CartItemCard({
+    Key? key,
+    required this.item,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Item image
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                item.imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 80,
+                    height: 80,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant, color: Colors.white),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                // Implement payment logic here
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Payment successful!'),
-                    backgroundColor: Colors.green,
+            const SizedBox(width: 16),
+            
+            // Item details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                );
-                context.read<CartProvider>().clearCart();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              child: const Text('Pay Now'),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${item.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.green,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Subtotal: \$${(item.price * item.quantity).toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Quantity controls
+            Column(
+              children: [
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: () {
+                        cart.decrementQuantity(item.id);
+                      },
+                    ),
+                    Text(
+                      '${item.quantity}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: () {
+                        cart.incrementQuantity(item.id);
+                      },
+                    ),
+                  ],
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Remove'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: EdgeInsets.zero,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed: () {
+                    cart.removeItem(item.id);
+                  },
+                ),
+              ],
             ),
           ],
         ),

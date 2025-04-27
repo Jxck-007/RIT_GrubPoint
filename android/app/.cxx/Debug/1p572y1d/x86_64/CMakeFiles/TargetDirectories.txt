@@ -1,0 +1,2 @@
+D:/grubpoint/RIT_GrubPoint/android/app/.cxx/Debug/1p572y1d/x86_64/CMakeFiles/edit_cache.dir
+D:/grubpoint/RIT_GrubPoint/android/app/.cxx/Debug/1p572y1d/x86_64/CMakeFiles/rebuild_cache.dir
