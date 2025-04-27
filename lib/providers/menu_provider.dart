@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/menu_item.dart';
 
-class MenuProvider with ChangeNotifier {
+class MenuProvider extends ChangeNotifier {
   String _searchQuery = '';
   String _selectedRestaurant = '';
   double _minPriceFilter = 0.0;
