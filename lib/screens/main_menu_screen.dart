@@ -10,6 +10,7 @@ import 'favorites_screen.dart';
 import 'notifications_screen.dart';
 import 'order_preview_screen.dart';
 import 'chat_screen.dart';
+import '../data/menu_data.dart';
 
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
@@ -20,62 +21,28 @@ class MainMenuScreen extends StatefulWidget {
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
   int _selectedIndex = 0;
-  String _searchQuery = '';
-  
-  // Sample menu items for now
-  final List<MenuItem> _menuItems = [
-    MenuItem(
-      id: 1,
-      name: 'Margherita Pizza',
-      description: 'Classic cheese pizza with tomato sauce',
-      price: 12.99,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Pizza',
-      rating: 4.5,
-    ),
-    MenuItem(
-      id: 2,
-      name: 'Chicken Burger',
-      description: 'Grilled chicken burger with lettuce and mayo',
-      price: 8.99,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Burger',
-      rating: 4.2,
-    ),
-    MenuItem(
-      id: 3,
-      name: 'Caesar Salad',
-      description: 'Fresh salad with chicken and caesar dressing',
-      price: 7.49,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Salad',
-      rating: 4.0,
-    ),
-    MenuItem(
-      id: 4,
-      name: 'Chocolate Milkshake',
-      description: 'Rich and creamy chocolate milkshake',
-      price: 4.99,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Beverage',
-      rating: 4.8,
-    ),
-  ];
-
-  // Filter categories
-  final List<String> _categories = ['All', 'Pizza', 'Burger', 'Salad', 'Beverage'];
   String _selectedCategory = 'All';
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+    final List<String> _categories = ['All', ...getRestaurantNames()];
+    final List<MenuItem> _menuItems = _selectedCategory == 'All'
+        ? demoMenuItems
+        : getMenuItemsByRestaurant(_selectedCategory);
+    final List<MenuItem> filteredItems = _menuItems.where((item) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesSearch;
+    }).toList();
+
     final List<Widget> _pages = [
       _buildMenuPage(),
       const CartPage(),
       const FavoritesScreen(),
       const ChatScreen(),
-      OrderPreviewScreen(orderItems: const [], total: 0),
     ];
 
     return Scaffold(
@@ -122,23 +89,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             icon: Icon(Icons.chat),
             label: 'Chat',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: 'Order Preview',
-          ),
         ],
       ),
     );
   }
 
   Widget _buildMenuPage() {
-    // Filter items based on selected category and search query
-    final filteredItems = _menuItems.where((item) {
-      final matchesCategory = _selectedCategory == 'All' || item.category == _selectedCategory;
-      final matchesSearch = _searchQuery.isEmpty || 
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final List<String> _categories = ['All', ...getRestaurantNames()];
+    final List<MenuItem> _menuItems = _selectedCategory == 'All'
+        ? demoMenuItems
+        : getMenuItemsByRestaurant(_selectedCategory);
+    final List<MenuItem> filteredItems = _menuItems.where((item) {
+      final matchesSearch = _searchQuery.isEmpty ||
           item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesSearch;
     }).toList();
 
     return Column(
@@ -186,7 +152,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             },
           ),
         ),
-        
         // Menu items
         Expanded(
           child: ListView.builder(
