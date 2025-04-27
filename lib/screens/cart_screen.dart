@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
+import '../models/menu_item.dart';
+import 'order_preview_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -9,7 +11,7 @@ class CartScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cartProvider, child) {
-        final items = cartProvider.items.values.toList();
+        final items = cartProvider.items;
         
         return Scaffold(
           appBar: AppBar(
@@ -31,7 +33,7 @@ class CartScreen extends StatelessWidget {
                           ),
                           TextButton(
                             onPressed: () {
-                              cartProvider.clear();
+                              cartProvider.clearCart();
                               Navigator.pop(context);
                             },
                             child: const Text('Clear'),
@@ -68,7 +70,7 @@ class CartScreen extends StatelessWidget {
                               ),
                             ),
                             onDismissed: (_) {
-                              cartProvider.removeItem(item.id);
+                              cartProvider.removeItem(item);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('${item.name} removed from cart'),
@@ -142,10 +144,13 @@ class CartScreen extends StatelessWidget {
                             ),
                             TextButton(
                               onPressed: items.isEmpty ? null : () {
-                                // TODO: Implement checkout
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Checkout functionality coming soon!'),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => OrderPreviewScreen(
+                                      orderItems: List<MenuItem>.from(items),
+                                      total: cartProvider.totalAmount,
+                                    ),
                                   ),
                                 );
                               },

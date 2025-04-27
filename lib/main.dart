@@ -1,13 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/menu_provider.dart';
+import 'providers/favorites_provider.dart';
 import 'models/menu_item.dart';
 import 'home_page.dart';
 import 'student_login.dart';
+import 'screens/main_menu_screen.dart';
+import 'screens/restaurant_list_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => MenuProvider()),
+        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -15,23 +29,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => MenuProvider()),
-      ],
-      child: MaterialApp(
-        title: 'RIT GrubPoint',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        darkTheme: ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        ),
-        themeMode: ThemeMode.system,
-        home: const WelcomePage(),
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'RIT GrubPoint',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.light,
+            ),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: themeProvider.themeMode,
+          home: const WelcomePage(),
+        );
+      },
     );
   }
 }
@@ -106,7 +125,7 @@ class WelcomePage extends StatelessWidget {
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomeMenuPage()),
+                  MaterialPageRoute(builder: (context) => const ShopSelectionScreen()),
                 );
               },
               child: const Text('Skip Login (Dev Only)'),

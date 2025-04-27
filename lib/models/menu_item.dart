@@ -7,7 +7,7 @@ class MenuItem {
   final String category;
   final bool isAvailable;
   final double rating;
-  final int quantity;
+  int quantity;
 
   MenuItem({
     required this.id,
