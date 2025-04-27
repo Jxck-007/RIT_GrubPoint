@@ -20,6 +20,10 @@ class _GeminiChatPageState extends State<GeminiChatPage> {
     super.initState();
     _loadChatHistory();
     _loadUserName();
+    // Initialize Gemini service
+    GeminiService.initialize().catchError((error) {
+      print('Failed to initialize Gemini: $error');
+    });
   }
 
   Future<void> _loadUserName() async {
@@ -27,6 +31,8 @@ class _GeminiChatPageState extends State<GeminiChatPage> {
     setState(() {
       _userName = prefs.getString('user_name');
     });
+    // Update Gemini service with the user name
+    await GeminiService.updateUserName();
   }
 
   Future<void> _loadChatHistory() async {
@@ -98,6 +104,8 @@ class _GeminiChatPageState extends State<GeminiChatPage> {
               });
               final prefs = await SharedPreferences.getInstance();
               await prefs.remove('chat_history');
+              // Reset the chat session
+              GeminiService.resetChat();
             },
           ),
         ],
