@@ -34,7 +34,7 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         _messages.add(
           ChatMessage(
-            text: 'Hello $_userName! I\'m Jarvix, your virtual assistant. How can I help you today?',
+            text: 'Hello $_userName! I\'m Jarvix. Ask me anything about today\'s menu, popular deals, or placing your order!',
             isUser: false,
           ),
         );
@@ -43,6 +43,28 @@ class _ChatPageState extends State<ChatPage> {
       // Initialize Gemini service
       try {
         await GeminiService.initialize();
+        
+        // Set up system prompt for the canteen preordering assistant
+        final systemPrompt = """
+You are Jarvix, a helpful canteen preordering assistant for RIT GrubPoint.
+Your primary purpose is to help students order food from the canteen.
+Be helpful, friendly, and concise when replying to the user $_userName.
+
+You can help with:
+- Menu suggestions based on food preferences
+- Information about today's special dishes
+- Popular orders among students
+- Preorder guidance and process steps
+- Answering FAQs about payment options
+- Providing pickup and delivery time information
+
+Always greet the user by their name: $_userName
+If you don't know an answer, suggest checking the menu page or asking the canteen staff.
+""";
+        
+        // Send system prompt to initialize the chat
+        await GeminiService.sendMessage(systemPrompt);
+        
       } catch (e) {
         print('Error initializing Gemini: $e');
         _showErrorSnackBar('Failed to initialize Jarvix. Using simulated responses.');
@@ -90,7 +112,7 @@ class _ChatPageState extends State<ChatPage> {
         setState(() {
           _messages.add(
             ChatMessage(
-              text: 'Sorry, I encountered an error while processing your request.',
+              text: 'Jarvix is currently unavailable. Please try again shortly.',
               isUser: false,
             ),
           );
@@ -320,7 +342,7 @@ class ChatBubble extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: isUser
-                    ? Colors.deepPurple.withOpacity(0.8)
+                    ? Colors.blue.withOpacity(0.8)
                     : Theme.of(context).brightness == Brightness.dark
                         ? Colors.grey[700]
                         : Colors.grey[300],
