@@ -136,7 +136,7 @@ class CategoryItemsScreen extends StatelessWidget {
                   item.imageUrl,
                   width: 100,
                   height: 100,
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: 100,

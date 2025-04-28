@@ -8,8 +8,6 @@ import '../screens/favorites_screen.dart';
 import '../profile_page.dart';
 import 'category_items_screen.dart';
 import '../services/firebase_service.dart';
-import '../favorites_page.dart';
-import 'settings_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({Key? key}) : super(key: key);
@@ -22,12 +20,18 @@ class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
   bool _isFirebaseAvailable = true;
   
-  // Cache pages to prevent rebuilding
   final List<Widget> _pages = [
     const HomePage(),
-    const ChatPage(),
     const CartPage(),
-    const FavoritesPage(),
+    const ChatPage(),
+    const FavoritesScreen(),
+  ];
+
+  final List<String> _titles = [
+    'Home',
+    'Cart',
+    'Jarvix Chat',
+    'Favorites',
   ];
 
   @override
@@ -40,44 +44,33 @@ class _MainNavigationState extends State<MainNavigation> {
     try {
       final service = FirebaseService();
       final isAvailable = await service.checkFirebaseAvailability();
-      if (mounted) {
-        setState(() {
-          _isFirebaseAvailable = isAvailable;
-        });
-        
-        if (!isAvailable) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Firebase services are currently unreachable. Please check your internet connection or try again later.'),
-              duration: Duration(seconds: 5),
-            ),
-          );
-        }
+      setState(() {
+        _isFirebaseAvailable = isAvailable;
+      });
+      
+      if (!isAvailable && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Firebase services are currently unreachable. Please check your internet connection or try again later.'),
+            duration: Duration(seconds: 5),
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isFirebaseAvailable = false;
-        });
-      }
+      setState(() {
+        _isFirebaseAvailable = false;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('RIT GrubPoint'),
+        title: Text(_titles[_selectedIndex]),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.dark_mode),
-            onPressed: () {
-              final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-              themeProvider.toggleTheme();
-            },
-          ),
-        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -88,19 +81,29 @@ class _MainNavigationState extends State<MainNavigation> {
                 color: Theme.of(context).colorScheme.primaryContainer,
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Image.asset(
-                    'assets/LOGO.png',
-                    height: 80,
-                    cacheWidth: 160,
+                  const CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.person,
+                      size: 40,
+                      color: Colors.deepPurple,
+                    ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   const Text(
                     'RIT GrubPoint',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Campus Food Delivery',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ],
@@ -118,13 +121,21 @@ class _MainNavigationState extends State<MainNavigation> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('About'),
+              onTap: () {
+                Navigator.pop(context);
+                _showAboutDialog(context);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                // Add settings navigation when available
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Settings coming soon')),
                 );
               },
             ),
@@ -136,49 +147,53 @@ class _MainNavigationState extends State<MainNavigation> {
                 _showCategoriesDialog(context);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.info),
-              title: const Text('About'),
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutDialog(context);
+            const Divider(),
+            // Theme toggle switch in drawer only
+            SwitchListTile(
+              title: const Text('Dark Mode'),
+              secondary: Icon(
+                themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
+              ),
+              value: themeProvider.isDarkMode,
+              onChanged: (value) {
+                themeProvider.toggleTheme();
               },
             ),
-            const Divider(),
             if (!_isFirebaseAvailable)
               const ListTile(
-                leading: Icon(Icons.warning, color: Colors.orange),
-                title: Text('Firebase Unavailable'),
+                leading: Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                title: Text('Firebase Unavailable', 
+                  style: TextStyle(color: Colors.orange)),
                 subtitle: Text('Some features may be limited'),
               ),
           ],
         ),
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        onTap: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        destinations: const [
-          NavigationDestination(
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
-          NavigationDestination(
+          BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
-          NavigationDestination(
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Jarvix',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.favorite),
             label: 'Favorites',
           ),
@@ -229,19 +244,23 @@ class _MainNavigationState extends State<MainNavigation> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.deepPurple.shade100, width: 2),
-                          boxShadow: [
+                          boxShadow: const [
                             BoxShadow(
                               color: Colors.black12,
                               blurRadius: 4,
                               offset: Offset(2, 2),
                             ),
                           ],
+                          color: Colors.white,
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            category['image']!,
-                            fit: BoxFit.cover,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(
+                              category['image']!,
+                              fit: BoxFit.contain,
+                            ),
                           ),
                         ),
                       ),
@@ -249,29 +268,16 @@ class _MainNavigationState extends State<MainNavigation> {
                     const SizedBox(height: 8),
                     Text(
                       category['name']!,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               );
             },
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About RIT GrubPoint'),
-        content: const Text(
-          'RIT GrubPoint is a food ordering and delivery app for RIT students. '
-          'Order your favorite food from various canteens and restaurants on campus.',
         ),
         actions: [
           TextButton(
@@ -280,6 +286,50 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
+    );
+  }
+  
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('About RIT GrubPoint'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  'assets/LOGO.png',
+                  height: 100,
+                  width: 100,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'RIT GrubPoint is the official food ordering app for students at Ramaiah Institute of Technology, Chennai.',
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Version: 1.0.0',
+                  style: TextStyle(fontStyle: FontStyle.italic),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '© 2023 RIT GrubPoint Team',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 } 
