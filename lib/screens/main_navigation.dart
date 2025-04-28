@@ -138,10 +138,10 @@ class _MainNavigationState extends State<MainNavigation> {
             ),
             const Divider(),
             if (!_isFirebaseAvailable)
-              ListTile(
-                leading: const Icon(Icons.warning, color: Colors.orange),
-                title: const Text('Firebase Unavailable'),
-                subtitle: const Text('Some features may be limited'),
+              const ListTile(
+                leading: Icon(Icons.warning, color: Colors.orange),
+                title: Text('Firebase Unavailable'),
+                subtitle: Text('Some features may be limited'),
               ),
           ],
         ),
