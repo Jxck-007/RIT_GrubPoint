@@ -22,8 +22,8 @@ void main() async {
   } catch (e) {
     print('Firebase initialization error: $e');
   }
+  runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -170,7 +170,6 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo
               Image.asset(
                 'assets/LOGO.png',
                 width: 150,
@@ -194,7 +193,6 @@ class WelcomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
-              // Login button
               SizedBox(
                 width: 200,
                 height: 50,
@@ -213,7 +211,6 @@ class WelcomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              // Skip login for development purposes
               TextButton(
                 onPressed: () {
                   Navigator.pushReplacement(

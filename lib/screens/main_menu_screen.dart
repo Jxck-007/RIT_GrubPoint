@@ -4,11 +4,8 @@ import '../providers/theme_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/cart_provider.dart';
 import '../models/menu_item.dart';
-import 'menu_screen.dart';
 import 'cart_page.dart';
 import 'favorites_screen.dart';
-import 'notifications_screen.dart';
-import 'order_preview_screen.dart';
 import 'chat_screen.dart';
 import '../data/menu_data.dart';
 
