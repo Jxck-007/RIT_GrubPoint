@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:responsive_framework/responsive_framework.dart';
@@ -14,15 +15,24 @@ import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
+  if (kIsWeb) {
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: const FirebaseOptions(
+        apiKey: "AIzaSyA3PqvnKx1XQzyl5qLDyaHKXNjqZgLkTYw",
+        authDomain: "rit-grubpoint.firebaseapp.com",
+        projectId: "rit-grubpoint",
+        storageBucket: "rit-grubpoint.firebasestorage.app",
+        messagingSenderId: "572069152415",
+        appId: "1:572069152415:web:59cf6f9f4e128d708544aa",
+        measurementId: "G-L16M4DEZ03"
+      )
     );
-  } catch (e) {
-    print('Firebase initialization error: $e');
+  } else {
+    await Firebase.initializeApp();
   }
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
