@@ -41,7 +41,7 @@ class CartPage extends StatelessWidget {
                             ),
                             title: Text(item.name ?? 'Unnamed Item'),
                             subtitle: Text(
-                              '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                              '₹${(item.price * item.quantity).toStringAsFixed(2)}',
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -80,7 +80,7 @@ class CartPage extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '\$${total.toStringAsFixed(2)}',
+                        '₹${total.toStringAsFixed(2)}',
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -175,7 +175,7 @@ class CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '\$${item.price.toStringAsFixed(2)}',
+                    '₹${item.price.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: Colors.green,
@@ -183,7 +183,7 @@ class CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Subtotal: \$${(item.price * item.quantity).toStringAsFixed(2)}',
+                    'Subtotal: ₹${(item.price * item.quantity).toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
