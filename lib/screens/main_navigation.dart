@@ -139,6 +139,14 @@ class _MainNavigationState extends State<MainNavigation> {
                 );
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+                Navigator.pop(context);
+                _showCategoriesDialog(context);
+              },
+            ),
             const Divider(),
             // Theme toggle switch in drawer only
             SwitchListTile(
@@ -195,16 +203,13 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _showCategoriesDialog(BuildContext context) {
-    // Use images from assets/shops/ directory instead of text labels
-    final categoryImages = {
-      'Aaharam': 'assets/shops/aaharam.jpg',
-      'Little Rangoon': 'assets/shops/little_rangoon.jpg',
-      'The Pacific Cafe': 'assets/shops/pacific_cafe.jpg',
-      'Cantina de Naples': 'assets/shops/cantina_de_naples.jpg',
-      'Calcutta in a Box': 'assets/shops/calcutta_in_a_box.jpg',
-      'All Categories': 'assets/RITcanteenimage.png',
-    };
-    
+    final categories = [
+      {'name': 'Aaharam', 'image': 'assets/shops/aaharam.jpg'},
+      {'name': 'Little Rangoon', 'image': 'assets/shops/little_rangoon.jpg'},
+      {'name': 'The Pacific Cafe', 'image': 'assets/shops/pacific_cafe.jpg'},
+      {'name': 'Cantina de Naples', 'image': 'assets/shops/cantina_de_naples.jpg'},
+      {'name': 'Calcutta in a Box', 'image': 'assets/shops/calcutta_in_a_box.jpg'},
+    ];
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -219,29 +224,56 @@ class _MainNavigationState extends State<MainNavigation> {
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
-            itemCount: categoryImages.length,
+            itemCount: categories.length,
             itemBuilder: (context, index) {
-              final entry = categoryImages.entries.elementAt(index);
-              final category = entry.key;
-              final imagePath = entry.value;
-              
-              // Return only images without text labels
+              final category = categories[index];
               return InkWell(
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
-                    context, 
+                    context,
                     MaterialPageRoute(
-                      builder: (context) => CategoryItemsScreen(category: category),
+                      builder: (context) => CategoryItemsScreen(category: category['name']!),
                     ),
                   );
                 },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(
-                    imagePath,
-                    fit: BoxFit.cover,
-                  ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.deepPurple.shade100, width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 4,
+                              offset: Offset(2, 2),
+                            ),
+                          ],
+                          color: Colors.white,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Image.asset(
+                              category['image']!,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      category['name']!,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               );
             },
