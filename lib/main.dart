@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,21 +15,15 @@ import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
   try {
-    // Initialize Firebase only if not already initialized
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    
-    runApp(const MyApp());
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
-    // If Firebase fails to initialize, still run the app in offline mode
-    runApp(const MyApp());
+    print('Firebase initialization error: $e');
   }
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
