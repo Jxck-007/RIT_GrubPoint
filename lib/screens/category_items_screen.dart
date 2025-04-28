@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/menu_item.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
+import '../../providers/menu_provider.dart';
 import '../../item_preview.dart';
 
 class CategoryItemsScreen extends StatelessWidget {
@@ -19,8 +20,19 @@ class CategoryItemsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    final items = menuItems ?? [];
-
+    final menuProvider = Provider.of<MenuProvider>(context);
+    
+    // Set category as selected restaurant to filter items (after build)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      menuProvider.setSelectedRestaurant(category);
+    });
+    
+    // Get the filtered items
+    final items = menuProvider.getFilteredItems();
+    
+    // Get category image
+    final String categoryImage = _getCategoryImage(category);
+    
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -35,21 +47,45 @@ class CategoryItemsScreen extends StatelessWidget {
                   BlendMode.darken,
                 ),
                 child: Image.asset(
-                  _getCategoryImage(category),
+                  categoryImage,
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
-          SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final item = items[index];
-                return _buildMenuItem(context, item, cartProvider, favoritesProvider);
-              },
-              childCount: items.length,
+          if (items.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.no_food,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No items found',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final item = items[index];
+                  return _buildMenuItem(context, item, cartProvider, favoritesProvider);
+                },
+                childCount: items.length,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -100,7 +136,7 @@ class CategoryItemsScreen extends StatelessWidget {
                   item.imageUrl,
                   width: 100,
                   height: 100,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: 100,
