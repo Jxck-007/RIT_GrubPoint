@@ -129,22 +129,19 @@ class _MainNavigationState extends State<MainNavigation> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
+              onTap: () {
+                Navigator.pop(context);
+                _showCategoriesDialog(context);
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
               onTap: () {
                 Navigator.pop(context);
                 _showAboutDialog(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                // Add settings navigation when available
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon')),
-                );
               },
             ),
             const Divider(),
@@ -239,16 +236,12 @@ class _MainNavigationState extends State<MainNavigation> {
                               offset: Offset(2, 2),
                             ),
                           ],
-                          color: Colors.white,
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.asset(
-                              category['image']!,
-                              fit: BoxFit.contain,
-                            ),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            category['image']!,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
@@ -256,16 +249,29 @@ class _MainNavigationState extends State<MainNavigation> {
                     const SizedBox(height: 8),
                     Text(
                       category['name']!,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
               );
             },
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('About RIT GrubPoint'),
+        content: const Text(
+          'RIT GrubPoint is a food ordering and delivery app for RIT students. '
+          'Order your favorite food from various canteens and restaurants on campus.',
         ),
         actions: [
           TextButton(
@@ -274,50 +280,6 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
-    );
-  }
-  
-  void _showAboutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('About RIT GrubPoint'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.asset(
-                  'assets/LOGO.png',
-                  height: 100,
-                  width: 100,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'RIT GrubPoint is the official food ordering app for students at Ramaiah Institute of Technology, Chennai.',
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Version: 1.0.0',
-                  style: TextStyle(fontStyle: FontStyle.italic),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '© 2023 RIT GrubPoint Team',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            ),
-          ],
-        );
-      },
     );
   }
 } 
