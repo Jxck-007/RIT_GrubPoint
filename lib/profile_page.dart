@@ -346,16 +346,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
                     Card(
                       color: Colors.orange[100],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                            const SizedBox(width: 16),
+                            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                            SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: const [
+                                children: [
                                   Text(
                                     'Firebase Unavailable',
                                     style: TextStyle(

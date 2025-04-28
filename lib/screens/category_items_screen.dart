@@ -1,115 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/menu_provider.dart';
-import '../models/menu_item.dart';
-import '../item_preview.dart';
-import '../providers/cart_provider.dart';
-import '../providers/favorites_provider.dart';
+import '../../models/menu_item.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/favorites_provider.dart';
+import '../../item_preview.dart';
 
 class CategoryItemsScreen extends StatelessWidget {
   final String category;
-  
+  final List<MenuItem>? menuItems;
+
   const CategoryItemsScreen({
     Key? key,
     required this.category,
+    this.menuItems,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final menuProvider = Provider.of<MenuProvider>(context);
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    
-    // Set category as selected restaurant to filter items
-    menuProvider.setSelectedRestaurant(category);
-    
-    // Get the filtered items
-    final items = menuProvider.getFilteredItems();
-    
-    // Get category image
-    final String categoryImage = _getCategoryImage(category);
-    
+    final items = menuItems ?? [];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(category),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      ),
-      body: Column(
-        children: [
-          // Category image header
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(categoryImage),
-                fit: BoxFit.cover,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: Text(category),
+              background: ColorFiltered(
                 colorFilter: ColorFilter.mode(
                   Colors.black.withOpacity(0.3),
                   BlendMode.darken,
                 ),
+                child: Image.asset(
+                  _getCategoryImage(category),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
-          Expanded(
-            child: items.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.no_food,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No items found',
-                          style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: items.length,
-                    itemBuilder: (context, index) {
-                      final item = items[index];
-                      return _buildMenuItem(context, item, cartProvider, favoritesProvider);
-                    },
-                  ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final item = items[index];
+                return _buildMenuItem(context, item, cartProvider, favoritesProvider);
+              },
+              childCount: items.length,
+            ),
           ),
         ],
       ),
     );
   }
-  
+
   String _getCategoryImage(String category) {
     final Map<String, String> categoryImages = {
-      'Aaharam': 'assets/shops/aaharam.jpg',
-      'Little Rangoon': 'assets/shops/little_rangoon.jpg',
-      'The Pacific Cafe': 'assets/shops/pacific_cafe.jpg',
-      'Cantina de Naples': 'assets/shops/cantina_de_naples.jpg',
-      'Calcutta in a Box': 'assets/shops/calcutta_in_a_box.jpg',
-      'All Categories': 'assets/RITcanteenimage.png',
+      'Main Canteen': 'assets/shops/main_canteen.jpg',
+      'South Indian Canteen': 'assets/shops/south_indian.jpg',
+      'North Indian Canteen': 'assets/shops/north_indian.jpg',
+      'Lunch': 'assets/shops/lunch.jpg',
+      'Chaat': 'assets/shops/chaat.jpg',
+      'Drinks': 'assets/shops/drinks.jpg',
+      'Snacks': 'assets/shops/snacks.jpg',
     };
     
     return categoryImages[category] ?? 'assets/RITcanteenimage.png';
   }
 
   Widget _buildMenuItem(
-    BuildContext context, 
-    MenuItem item, 
+    BuildContext context,
+    MenuItem item,
     CartProvider cartProvider,
-    FavoritesProvider favoritesProvider
+    FavoritesProvider favoritesProvider,
   ) {
     final isFavorite = favoritesProvider.isFavorite(item);
     
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.all(8),
       child: InkWell(
         onTap: () {
           Navigator.push(

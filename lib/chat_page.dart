@@ -244,11 +244,11 @@ If you don't know an answer, suggest checking the menu page or asking the cantee
               color: Theme.of(context).brightness == Brightness.dark
                   ? Colors.grey[800]
                   : Colors.grey[200],
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 4,
-                  offset: const Offset(0, -2),
+                  offset: Offset(0, -2),
                 ),
               ],
             ),
@@ -326,10 +326,10 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
+            const CircleAvatar(
               backgroundColor: Colors.deepPurple,
               radius: 18,
-              child: const Icon(
+              child: Icon(
                 Icons.smart_toy,
                 color: Colors.white,
                 size: 18,
