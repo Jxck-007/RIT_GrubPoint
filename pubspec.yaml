@@ -19,6 +19,8 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.18.1
   google_generative_ai: 0.2.0
+  cached_network_image: ^3.3.1
+  responsive_framework: ^1.4.0
 
 dev_dependencies:
   flutter_test:

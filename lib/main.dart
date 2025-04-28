@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:responsive_framework/responsive_framework.dart';
 import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
@@ -9,69 +10,55 @@ import 'providers/favorites_provider.dart';
 import 'services/firebase_service.dart';
 import 'screens/main_navigation.dart';
 import 'student_login.dart';
+import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
-  bool firebaseInitialized = false;
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    firebaseInitialized = true;
   } catch (e) {
-    print('Failed to initialize Firebase: $e');
-    // Continue with the app even if Firebase initialization fails
+    print('Firebase initialization error: $e');
   }
-  
-  runApp(
-    MultiProvider(
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
-      child: MyApp(firebaseInitialized: firebaseInitialized),
-    ),
-  );
-}
-
-class MyApp extends StatelessWidget {
-  final bool firebaseInitialized;
-  
-  const MyApp({
-    super.key,
-    this.firebaseInitialized = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: 'RIT GrubPoint',
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.light,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'RIT GrubPoint',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
             ),
-            useMaterial3: true,
-          ),
-          darkTheme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.deepPurple,
-              brightness: Brightness.dark,
+            darkTheme: ThemeData.dark(useMaterial3: true),
+            themeMode: themeProvider.themeMode,
+            builder: (context, child) => ResponsiveBreakpoints.builder(
+              child: child!,
+              breakpoints: [
+                const Breakpoint(start: 0, end: 450, name: 'MOBILE'),
+                const Breakpoint(start: 451, end: 800, name: 'TABLET'),
+                const Breakpoint(start: 801, end: 1920, name: 'DESKTOP'),
+                const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
+              ],
             ),
-            useMaterial3: true,
-          ),
-          themeMode: themeProvider.themeMode,
-          home: !firebaseInitialized 
-              ? const FirebaseErrorScreen()
-              : const WelcomePage(),
-        );
-      },
+            home: const WelcomePage(),
+          );
+        },
+      ),
     );
   }
 }
@@ -125,7 +112,7 @@ class FirebaseErrorScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const WelcomePage()),
+                      MaterialPageRoute(builder: (context) => const HomePage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
