@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'models/menu_item.dart';
 import 'providers/cart_provider.dart';
 import 'item_preview.dart';
@@ -41,116 +42,123 @@ class _HomePageState extends State<HomePage> {
     // Add 'All' to the categories if it's not already there
     final allCategories = ['All', ...categories];
     
-    return Column(
-      children: [
-        // Search Bar
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            decoration: InputDecoration(
-              hintText: 'Search for food...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-                menuProvider.setSearchQuery(value);
-              });
-            },
-          ),
-        ),
-        
-        // Category Images Row
-        SizedBox(
-          height: 120,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: allCategories.length,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemBuilder: (context, index) {
-              final category = allCategories[index];
-              final isSelected = _selectedCategory == category;
-              final imagePath = _categoryImages[category] ?? 'assets/RITcanteenimage.png';
-              
-              return Padding(
-                padding: const EdgeInsets.only(right: 12.0),
-                child: GestureDetector(
-                  onTap: () {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Search Bar
+            Material(
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search for food...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onChanged: (value) {
                     setState(() {
-                      _selectedCategory = category;
-                      if (category == 'All') {
-                        menuProvider.setSelectedRestaurant('');
-                      } else {
-                        menuProvider.setSelectedRestaurant(category);
-                        // Navigate to category screen
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CategoryItemsScreen(category: category),
-                          ),
-                        );
-                      }
+                      _searchQuery = value;
+                      menuProvider.setSearchQuery(value);
                     });
                   },
-                  child: Container(
-                    width: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: isSelected
-                          ? Border.all(color: Colors.deepPurple, width: 2)
-                          : null,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.asset(
-                        imagePath,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
                 ),
-              );
-            },
-          ),
-        ),
-
-        // Menu Items List
-        Expanded(
-          child: items.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.no_food,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No items found',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.grey[600],
+              ),
+            ),
+            
+            // Category Images Row
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: allCategories.length,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemBuilder: (context, index) {
+                  final category = allCategories[index];
+                  final isSelected = _selectedCategory == category;
+                  final imagePath = _categoryImages[category] ?? 'assets/RITcanteenimage.png';
+                  
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12.0),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = category;
+                          if (category == 'All') {
+                            menuProvider.setSelectedRestaurant('');
+                          } else {
+                            menuProvider.setSelectedRestaurant(category);
+                            // Navigate to category screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CategoryItemsScreen(category: category),
+                              ),
+                            );
+                          }
+                        });
+                      },
+                      child: Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          border: isSelected
+                              ? Border.all(color: Colors.deepPurple, width: 2)
+                              : null,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.asset(
+                            imagePath,
+                            fit: BoxFit.cover,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _buildMenuItem(context, item, cartProvider, favoritesProvider);
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            // Menu Items List
+            Expanded(
+              child: items.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.no_food,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No items found',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: items.length,
+                      itemBuilder: (context, index) {
+                        final item = items[index];
+                        return _buildMenuItem(context, item, cartProvider, favoritesProvider);
+                      },
+                    ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
   
@@ -181,19 +189,23 @@ class _HomePageState extends State<HomePage> {
               // Item image
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  item.imageUrl,
+                child: CachedNetworkImage(
+                  imageUrl: item.imageUrl,
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 100,
-                      height: 100,
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.restaurant),
-                    );
-                  },
+                  placeholder: (context, url) => Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.grey[300],
+                    child: const Center(child: CircularProgressIndicator()),
+                  ),
+                  errorWidget: (context, url, error) => Container(
+                    width: 100,
+                    height: 100,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant),
+                  ),
                 ),
               ),
               const SizedBox(width: 16),
