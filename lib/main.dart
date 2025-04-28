@@ -2,28 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart';
-import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/menu_provider.dart';
 import 'providers/favorites_provider.dart';
 import 'screens/main_navigation.dart';
-import 'screens/login_page.dart';
+import 'student_login.dart';
 import 'home_page.dart';
+import 'firebase_options.dart';
+import 'screens/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    print('Firebase initialization error: $e');
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -56,20 +53,7 @@ class MyApp extends StatelessWidget {
                 const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
               ],
             ),
-            home: StreamBuilder(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                
-                if (snapshot.hasData) {
-                  return const MainNavigation();
-                }
-                
-                return const LoginPage();
-              },
-            ),
+            home: const LoginPage(),
           );
         },
       ),
@@ -170,6 +154,7 @@ class WelcomePage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Logo
               Image.asset(
                 'assets/LOGO.png',
                 width: 150,
@@ -193,6 +178,7 @@ class WelcomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 32),
+              // Login button
               SizedBox(
                 width: 200,
                 height: 50,
@@ -200,7 +186,7 @@ class WelcomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(builder: (context) => const StudentLoginPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -211,6 +197,7 @@ class WelcomePage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              // Skip login for development purposes
               TextButton(
                 onPressed: () {
                   Navigator.pushReplacement(
