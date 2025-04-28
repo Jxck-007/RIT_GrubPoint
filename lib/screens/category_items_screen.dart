@@ -20,8 +20,10 @@ class CategoryItemsScreen extends StatelessWidget {
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
     
-    // Set category as selected restaurant to filter items
-    menuProvider.setSelectedRestaurant(category);
+    // Set category as selected restaurant to filter items (after build)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      menuProvider.setSelectedRestaurant(category);
+    });
     
     // Get the filtered items
     final items = menuProvider.getFilteredItems();
@@ -36,21 +38,6 @@ class CategoryItemsScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Category image header
-          Container(
-            height: 150,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(categoryImage),
-                fit: BoxFit.cover,
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.3),
-                  BlendMode.darken,
-                ),
-              ),
-            ),
-          ),
           Expanded(
             child: items.isEmpty
                 ? Center(
@@ -131,7 +118,7 @@ class CategoryItemsScreen extends StatelessWidget {
                   item.imageUrl,
                   width: 100,
                   height: 100,
-                  fit: BoxFit.cover,
+                  fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       width: 100,
