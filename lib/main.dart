@@ -1,27 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/menu_provider.dart';
 import 'providers/favorites_provider.dart';
-import 'services/firebase_service.dart';
 import 'screens/main_navigation.dart';
-import 'student_login.dart';
+import 'screens/login_page.dart';
 import 'home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    // Initialize Firebase only if not already initialized
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    
+    runApp(const MyApp());
   } catch (e) {
-    print('Firebase initialization error: $e');
+    // If Firebase fails to initialize, still run the app in offline mode
+    runApp(const MyApp());
   }
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -55,7 +61,20 @@ class MyApp extends StatelessWidget {
                 const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
               ],
             ),
-            home: const WelcomePage(),
+            home: StreamBuilder(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                
+                if (snapshot.hasData) {
+                  return const MainNavigation();
+                }
+                
+                return const LoginPage();
+              },
+            ),
           );
         },
       ),
@@ -188,7 +207,7 @@ class WelcomePage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const StudentLoginPage()),
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

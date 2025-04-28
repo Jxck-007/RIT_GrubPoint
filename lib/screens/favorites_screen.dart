@@ -83,7 +83,7 @@ class FavoritesScreen extends StatelessWidget {
             Text('₹${item.price.toStringAsFixed(2)}'),
             Row(
               children: [
-                Icon(Icons.star, size: 16, color: Colors.amber),
+                const Icon(Icons.star, size: 16, color: Colors.amber),
                 Text(' ${item.rating.toStringAsFixed(1)}'),
               ],
             ),

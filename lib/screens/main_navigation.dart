@@ -8,6 +8,8 @@ import '../screens/favorites_screen.dart';
 import '../profile_page.dart';
 import 'category_items_screen.dart';
 import '../services/firebase_service.dart';
+import '../favorites_page.dart';
+import 'settings_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({Key? key}) : super(key: key);
@@ -20,18 +22,12 @@ class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
   bool _isFirebaseAvailable = true;
   
+  // Cache pages to prevent rebuilding
   final List<Widget> _pages = [
     const HomePage(),
-    const CartPage(),
     const ChatPage(),
-    const FavoritesScreen(),
-  ];
-
-  final List<String> _titles = [
-    'Home',
-    'Cart',
-    'Jarvix Chat',
-    'Favorites',
+    const CartPage(),
+    const FavoritesPage(),
   ];
 
   @override
@@ -44,33 +40,44 @@ class _MainNavigationState extends State<MainNavigation> {
     try {
       final service = FirebaseService();
       final isAvailable = await service.checkFirebaseAvailability();
-      setState(() {
-        _isFirebaseAvailable = isAvailable;
-      });
-      
-      if (!isAvailable && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Firebase services are currently unreachable. Please check your internet connection or try again later.'),
-            duration: Duration(seconds: 5),
-          ),
-        );
+      if (mounted) {
+        setState(() {
+          _isFirebaseAvailable = isAvailable;
+        });
+        
+        if (!isAvailable) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Firebase services are currently unreachable. Please check your internet connection or try again later.'),
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
       }
     } catch (e) {
-      setState(() {
-        _isFirebaseAvailable = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isFirebaseAvailable = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titles[_selectedIndex]),
+        title: const Text('RIT GrubPoint'),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.dark_mode),
+            onPressed: () {
+              final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+              themeProvider.toggleTheme();
+            },
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -81,29 +88,19 @@ class _MainNavigationState extends State<MainNavigation> {
                 color: Theme.of(context).colorScheme.primaryContainer,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
-                    child: Icon(
-                      Icons.person,
-                      size: 40,
-                      color: Colors.deepPurple,
-                    ),
+                  Image.asset(
+                    'assets/LOGO.png',
+                    height: 80,
+                    cacheWidth: 160,
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   const Text(
                     'RIT GrubPoint',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Campus Food Delivery',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ],
@@ -121,6 +118,17 @@ class _MainNavigationState extends State<MainNavigation> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.info),
               title: const Text('About'),
               onTap: () {
@@ -128,64 +136,41 @@ class _MainNavigationState extends State<MainNavigation> {
                 _showAboutDialog(context);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                // Add settings navigation when available
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Settings coming soon')),
-                );
-              },
-            ),
             const Divider(),
-            // Theme toggle switch in drawer only
-            SwitchListTile(
-              title: const Text('Dark Mode'),
-              secondary: Icon(
-                themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-              ),
-              value: themeProvider.isDarkMode,
-              onChanged: (value) {
-                themeProvider.toggleTheme();
-              },
-            ),
             if (!_isFirebaseAvailable)
               ListTile(
-                leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                title: const Text('Firebase Unavailable', 
-                  style: TextStyle(color: Colors.orange)),
+                leading: const Icon(Icons.warning, color: Colors.orange),
+                title: const Text('Firebase Unavailable'),
                 subtitle: const Text('Some features may be limited'),
               ),
           ],
         ),
       ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _selectedIndex,
+        onDestinationSelected: (index) {
           setState(() {
             _selectedIndex = index;
           });
         },
-        items: const [
-          BottomNavigationBarItem(
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.shopping_cart),
             label: 'Cart',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Jarvix',
-          ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.favorite),
             label: 'Favorites',
           ),

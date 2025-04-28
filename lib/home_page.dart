@@ -19,15 +19,45 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
 
-  // Map for category images
-  final Map<String, String> _categoryImages = {
-    'Aaharam': 'assets/shops/aaharam.jpg',
-    'Little Rangoon': 'assets/shops/little_rangoon.jpg',
-    'The Pacific Cafe': 'assets/shops/pacific_cafe.jpg',
-    'Cantina de Naples': 'assets/shops/cantina_de_naples.jpg',
-    'Calcutta in a Box': 'assets/shops/calcutta_in_a_box.jpg',
-    'All': 'assets/RITcanteenimage.png',
-  };
+  // Category names
+  final List<String> _categories = [
+    'Lunch',
+    'Chaat',
+    'Drinks',
+    'Snacks',
+    'All'
+  ];
+
+  // Canteen data for drawer
+  final List<Map<String, dynamic>> _canteens = [
+    {
+      'name': 'Main Canteen',
+      'image': 'assets/shops/aaharam.jpg',
+      'menu': [
+        {'name': 'Pasta', 'price': 120, 'category': 'Lunch'},
+        {'name': 'Sandwich', 'price': 80, 'category': 'Snacks'},
+        {'name': 'Tea', 'price': 20, 'category': 'Drinks'},
+      ],
+    },
+    {
+      'name': 'Hostel Mess',
+      'image': 'assets/shops/calcutta_in_a_box.jpg',
+      'menu': [
+        {'name': 'Rice Plate', 'price': 60, 'category': 'Lunch'},
+        {'name': 'Chapati', 'price': 10, 'category': 'Snacks'},
+        {'name': 'Lassi', 'price': 30, 'category': 'Drinks'},
+      ],
+    },
+    {
+      'name': 'Juice Bar',
+      'image': 'assets/shops/little_rangoon.jpg',
+      'menu': [
+        {'name': 'Fresh Juice', 'price': 50, 'category': 'Drinks'},
+        {'name': 'Fruit Salad', 'price': 70, 'category': 'Snacks'},
+        {'name': 'Smoothie', 'price': 90, 'category': 'Drinks'},
+      ],
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -35,129 +65,158 @@ class _HomePageState extends State<HomePage> {
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
     
-    // Get all menu items
     final items = menuProvider.getFilteredItems();
-    final categories = menuProvider.allRestaurants;
-    
-    // Add 'All' to the categories if it's not already there
-    final allCategories = ['All', ...categories];
     
     return Scaffold(
-      body: SafeArea(
-        child: Column(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            // Search Bar
-            Material(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Search for food...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primaryContainer,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/LOGO.png',
+                    height: 80,
+                    cacheWidth: 160,
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                      menuProvider.setSearchQuery(value);
-                    });
-                  },
-                ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'RIT GrubPoint',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
-            
-            // Category Images Row
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: allCategories.length,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemBuilder: (context, index) {
-                  final category = allCategories[index];
-                  final isSelected = _selectedCategory == category;
-                  final imagePath = _categoryImages[category] ?? 'assets/RITcanteenimage.png';
-                  
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = category;
-                          if (category == 'All') {
-                            menuProvider.setSelectedRestaurant('');
-                          } else {
-                            menuProvider.setSelectedRestaurant(category);
-                            // Navigate to category screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => CategoryItemsScreen(category: category),
-                              ),
-                            );
-                          }
-                        });
-                      },
-                      child: Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: isSelected
-                              ? Border.all(color: Colors.deepPurple, width: 2)
-                              : null,
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.asset(
-                            imagePath,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+            ..._canteens.map((canteen) => ListTile(
+              leading: CircleAvatar(
+                backgroundImage: AssetImage(canteen['image']),
+                radius: 20,
+              ),
+              title: Text(canteen['name']),
+              onTap: () {
+                Navigator.pop(context);
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CategoryItemsScreen(
+                        category: canteen['name'],
+                        menuItems: canteen['menu'].map((item) => MenuItem(
+                          id: DateTime.now().millisecondsSinceEpoch,
+                          name: item['name'],
+                          description: 'Delicious ${item['name']} from ${canteen['name']}',
+                          price: item['price'].toDouble(),
+                          imageUrl: 'https://via.placeholder.com/150',
+                          category: item['category'],
+                        )).toList(),
                       ),
                     ),
                   );
+                });
+              },
+            )),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search Bar
+          Material(
+            elevation: 2,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search for food...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                    menuProvider.setSearchQuery(value);
+                  });
                 },
               ),
             ),
-
-            // Menu Items List
-            Expanded(
-              child: items.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.no_food,
-                            size: 64,
-                            color: Colors.grey[400],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No items found',
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: items.length,
-                      itemBuilder: (context, index) {
-                        final item = items[index];
-                        return _buildMenuItem(context, item, cartProvider, favoritesProvider);
-                      },
-                    ),
+          ),
+          
+          // Category Chips
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: _categories.length,
+              itemBuilder: (context, index) {
+                final category = _categories[index];
+                final isSelected = _selectedCategory == category;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FilterChip(
+                    label: Text(category),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedCategory = category;
+                        if (category == 'All') {
+                          menuProvider.setSelectedRestaurant('');
+                        } else {
+                          menuProvider.setSelectedRestaurant(category);
+                        }
+                      });
+                    },
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+
+          // Menu Items List
+          Expanded(
+            child: items.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.no_food,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No items found',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return _buildMenuItem(context, item, cartProvider, favoritesProvider);
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

@@ -27,18 +27,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final List<String> _categories = ['All', ...getRestaurantNames()];
-    final List<MenuItem> _menuItems = _selectedCategory == 'All'
+    final List<String> categories = ['All', ...getRestaurantNames()];
+    final List<MenuItem> menuItems = _selectedCategory == 'All'
         ? demoMenuItems
         : getMenuItemsByRestaurant(_selectedCategory);
-    final List<MenuItem> filteredItems = _menuItems.where((item) {
+    final List<MenuItem> filteredItems = menuItems.where((item) {
       final matchesSearch = _searchQuery.isEmpty ||
           item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesSearch;
     }).toList();
 
-    final List<Widget> _pages = [
+    final List<Widget> pages = [
       _buildMenuPage(),
       const CartPage(),
       const FavoritesScreen(),
@@ -61,7 +61,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           ),
         ],
       ),
-      body: _pages[_selectedIndex],
+      body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         selectedItemColor: Colors.deepPurple,
@@ -96,11 +96,11 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
 
   Widget _buildMenuPage() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final List<String> _categories = ['All', ...getRestaurantNames()];
-    final List<MenuItem> _menuItems = _selectedCategory == 'All'
+    final List<String> categories = ['All', ...getRestaurantNames()];
+    final List<MenuItem> menuItems = _selectedCategory == 'All'
         ? demoMenuItems
         : getMenuItemsByRestaurant(_selectedCategory);
-    final List<MenuItem> filteredItems = _menuItems.where((item) {
+    final List<MenuItem> filteredItems = menuItems.where((item) {
       final matchesSearch = _searchQuery.isEmpty ||
           item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           item.description.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -135,16 +135,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
+            itemCount: categories.length,
             itemBuilder: (context, index) {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
-                  label: Text(_categories[index]),
-                  selected: _selectedCategory == _categories[index],
+                  label: Text(categories[index]),
+                  selected: _selectedCategory == categories[index],
                   onSelected: (selected) {
                     setState(() {
-                      _selectedCategory = _categories[index];
+                      _selectedCategory = categories[index];
                     });
                   },
                 ),
