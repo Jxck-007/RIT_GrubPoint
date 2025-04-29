@@ -7,6 +7,7 @@ import 'item_preview.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/menu_provider.dart';
 import 'screens/category_items_screen.dart';
+import 'data/menu_data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -19,13 +20,14 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   String _selectedCategory = 'All';
 
-  // Category names
+  // Food categories
   final List<String> _categories = [
+    'All',
     'Lunch',
+    'Breakfast',
     'Chaat',
     'Drinks',
-    'Snacks',
-    'All'
+    'Snacks'
   ];
 
   // Canteen data for drawer
@@ -65,7 +67,21 @@ class _HomePageState extends State<HomePage> {
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
     
-    final items = menuProvider.getFilteredItems();
+    // Get all menu items
+    final allItems = getAllMenuItems();
+    
+    // Filter items based on selected category
+    final items = _selectedCategory == 'All' 
+        ? allItems 
+        : allItems.where((item) => item.category == _selectedCategory).toList();
+    
+    // Filter items based on search query
+    final filteredItems = _searchQuery.isEmpty
+        ? items
+        : items.where((item) => 
+            item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            item.description.toLowerCase().contains(_searchQuery.toLowerCase())
+          ).toList();
     
     return Scaffold(
       drawer: Drawer(
@@ -95,34 +111,81 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-            ..._canteens.map((canteen) => ListTile(
-              leading: CircleAvatar(
-                backgroundImage: AssetImage(canteen['image']),
-                radius: 20,
-              ),
-              title: Text(canteen['name']),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('Categories'),
               onTap: () {
                 Navigator.pop(context);
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryItemsScreen(
-                        category: canteen['name'],
-                        menuItems: canteen['menu'].map((item) => MenuItem(
-                          id: DateTime.now().millisecondsSinceEpoch,
-                          name: item['name'],
-                          description: 'Delicious ${item['name']} from ${canteen['name']}',
-                          price: item['price'].toDouble(),
-                          imageUrl: 'https://via.placeholder.com/150',
-                          category: item['category'],
-                        )).toList(),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Scaffold(
+                      appBar: AppBar(
+                        title: const Text('Select Category'),
+                        leading: IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ),
+                      body: GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.0,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: _categories.length - 1, // Exclude 'All'
+                        itemBuilder: (context, index) {
+                          final category = _categories[index + 1]; // Skip 'All'
+                          return InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = category;
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(color: Colors.deepPurple.shade100, width: 2),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Colors.black12,
+                                          blurRadius: 4,
+                                          offset: Offset(2, 2),
+                                        ),
+                                      ],
+                                      color: Colors.white,
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        _getCategoryIcon(category),
+                                        size: 48,
+                                        color: Colors.deepPurple,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  category,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  );
-                });
+                  ),
+                );
               },
-            )),
+            ),
           ],
         ),
       ),
@@ -145,7 +208,6 @@ class _HomePageState extends State<HomePage> {
                 onChanged: (value) {
                   setState(() {
                     _searchQuery = value;
-                    menuProvider.setSearchQuery(value);
                   });
                 },
               ),
@@ -171,11 +233,6 @@ class _HomePageState extends State<HomePage> {
                     onSelected: (selected) {
                       setState(() {
                         _selectedCategory = category;
-                        if (category == 'All') {
-                          menuProvider.setSelectedRestaurant('');
-                        } else {
-                          menuProvider.setSelectedRestaurant(category);
-                        }
                       });
                     },
                   ),
@@ -186,7 +243,7 @@ class _HomePageState extends State<HomePage> {
 
           // Menu Items List
           Expanded(
-            child: items.isEmpty
+            child: filteredItems.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -209,9 +266,9 @@ class _HomePageState extends State<HomePage> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: items.length,
+                    itemCount: filteredItems.length,
                     itemBuilder: (context, index) {
-                      final item = items[index];
+                      final item = filteredItems[index];
                       return _buildMenuItem(context, item, cartProvider, favoritesProvider);
                     },
                   ),
@@ -219,6 +276,23 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category) {
+      case 'Lunch':
+        return Icons.lunch_dining;
+      case 'Breakfast':
+        return Icons.breakfast_dining;
+      case 'Chaat':
+        return Icons.food_bank;
+      case 'Drinks':
+        return Icons.local_drink;
+      case 'Snacks':
+        return Icons.fastfood;
+      default:
+        return Icons.category;
+    }
   }
   
   Widget _buildMenuItem(

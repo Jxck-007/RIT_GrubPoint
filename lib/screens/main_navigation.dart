@@ -68,10 +68,10 @@ class _MainNavigationState extends State<MainNavigation> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
     return Scaffold(
-      appBar: AppBar(
+      appBar: _selectedIndex == 0 ? AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      ),
+      ) : null,
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -82,21 +82,22 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircleAvatar(
-                    radius: 40,
+                    radius: 30,
                     backgroundColor: Colors.white,
                     child: Icon(
                       Icons.person,
-                      size: 40,
+                      size: 30,
                       color: Colors.deepPurple,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   const Text(
                     'RIT GrubPoint',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -104,6 +105,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     'Campus Food Delivery',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -210,26 +212,31 @@ class _MainNavigationState extends State<MainNavigation> {
       {'name': 'Cantina de Naples', 'image': 'assets/shops/cantina_de_naples.jpg'},
       {'name': 'Calcutta in a Box', 'image': 'assets/shops/calcutta_in_a_box.jpg'},
     ];
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Select Category'),
-        content: SizedBox(
-          width: double.maxFinite,
-          height: 300,
-          child: GridView.builder(
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(
+            title: const Text('Select Category'),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: GridView.builder(
+            padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               childAspectRatio: 1.0,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
             ),
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
               return InkWell(
                 onTap: () {
-                  Navigator.pop(context);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -279,12 +286,6 @@ class _MainNavigationState extends State<MainNavigation> {
             },
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }

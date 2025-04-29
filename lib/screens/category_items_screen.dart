@@ -3,106 +3,60 @@ import 'package:provider/provider.dart';
 import '../../models/menu_item.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/favorites_provider.dart';
-import '../../providers/menu_provider.dart';
+import '../../data/menu_data.dart';
 import '../../item_preview.dart';
 
 class CategoryItemsScreen extends StatelessWidget {
   final String category;
-  final List<MenuItem>? menuItems;
 
   const CategoryItemsScreen({
     Key? key,
     required this.category,
-    this.menuItems,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    final menuProvider = Provider.of<MenuProvider>(context);
     
-    // Set category as selected restaurant to filter items (after build)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      menuProvider.setSelectedRestaurant(category);
-    });
-    
-    // Get the filtered items
-    final items = menuProvider.getFilteredItems();
-    
-    // Get category image
-    final String categoryImage = _getCategoryImage(category);
+    // Get menu items for the selected category
+    final items = getMenuItemsByRestaurant(category);
     
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(category),
-              background: ColorFiltered(
-                colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.3),
-                  BlendMode.darken,
-                ),
-                child: Image.asset(
-                  categoryImage,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          if (items.isEmpty)
-            SliverFillRemaining(
-              child: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.no_food,
-                      size: 64,
-                      color: Colors.grey[400],
+      appBar: AppBar(
+        title: Text(category),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      ),
+      body: items.isEmpty
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.no_food,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No items found',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey[600],
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No items found',
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             )
-          else
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = items[index];
-                  return _buildMenuItem(context, item, cartProvider, favoritesProvider);
-                },
-                childCount: items.length,
-              ),
+          : ListView.builder(
+              padding: const EdgeInsets.all(8),
+              itemCount: items.length,
+              itemBuilder: (context, index) {
+                final item = items[index];
+                return _buildMenuItem(context, item, cartProvider, favoritesProvider);
+              },
             ),
-        ],
-      ),
     );
-  }
-
-  String _getCategoryImage(String category) {
-    final Map<String, String> categoryImages = {
-      'Main Canteen': 'assets/shops/main_canteen.jpg',
-      'South Indian Canteen': 'assets/shops/south_indian.jpg',
-      'North Indian Canteen': 'assets/shops/north_indian.jpg',
-      'Lunch': 'assets/shops/lunch.jpg',
-      'Chaat': 'assets/shops/chaat.jpg',
-      'Drinks': 'assets/shops/drinks.jpg',
-      'Snacks': 'assets/shops/snacks.jpg',
-    };
-    
-    return categoryImages[category] ?? 'assets/RITcanteenimage.png';
   }
 
   Widget _buildMenuItem(
