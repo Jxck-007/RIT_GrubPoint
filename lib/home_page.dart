@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'models/menu_item.dart';
 import 'providers/cart_provider.dart';
-import 'item_preview.dart';
+import 'widgets/item_preview.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/menu_provider.dart';
 import 'screens/category_items_screen.dart';
