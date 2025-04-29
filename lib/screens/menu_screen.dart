@@ -170,7 +170,7 @@ class MenuItemCard extends StatelessWidget {
             else
               ElevatedButton(
                 onPressed: () {
-                  cart.addItem(item);
+                  cart.addToCart(item);
                   ScaffoldMessenger.of(context).hideCurrentSnackBar();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

@@ -106,7 +106,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 20),
-                    // Logo
                     Image.asset(
                       'assets/LOGO.png',
                       width: 120,
@@ -121,7 +120,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // Name field
                     TextFormField(
                       controller: _nameController,
                       decoration: const InputDecoration(
@@ -139,16 +137,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Email field
                     TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
                         labelText: 'College Email',
-<<<<<<< HEAD
-                        hintText: 'example@cse.ritchennai.edu.in',
-=======
                         hintText: 'example@dept.ritchennai.edu.in',
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
                         filled: true,
@@ -159,20 +152,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your college email';
                         }
-<<<<<<< HEAD
-                        if (!value.endsWith('@ritchennai.edu.in')) {
-                          return 'Please enter a valid RIT Chennai email';
-=======
                         final deptEmailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@(cse|aiml|aids|ece|vlsi|mech)\.ritchennai\.edu\.in$');
                         if (!deptEmailRegExp.hasMatch(value)) {
                           return 'Email must be of the form example@dept.ritchennai.edu.in (dept: cse, aiml, aids, ece, vlsi, mech)';
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Password field
                     TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -204,7 +191,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    // Confirm Password field
                     TextFormField(
                       controller: _confirmPasswordController,
                       decoration: InputDecoration(
@@ -236,7 +222,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    // Register button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -259,17 +244,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    // Login link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text("Already have an account?"),
+                        const Text('Already have an account?'),
                         TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => const LoginPage()),
-                            );
+                            Navigator.pop(context);
                           },
                           child: const Text('Login'),
                         ),

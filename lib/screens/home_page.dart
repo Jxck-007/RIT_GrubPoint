@@ -3,27 +3,25 @@ import 'package:provider/provider.dart';
 import '../models/menu_item.dart';
 import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
+import '../providers/menu_provider.dart';
 import '../widgets/item_preview.dart';
 
-class CategoryItemsScreen extends StatelessWidget {
-  final String category;
-  final List<MenuItem> items;
-
-  const CategoryItemsScreen({
-    required this.category,
-    required this.items,
-    Key? key,
-  }) : super(key: key);
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
 
   @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
   Widget build(BuildContext context) {
+    final menuProvider = Provider.of<MenuProvider>(context);
     final cartProvider = Provider.of<CartProvider>(context);
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final filteredItems = menuProvider.getFilteredItems();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(category),
-      ),
       body: GridView.builder(
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -32,9 +30,9 @@ class CategoryItemsScreen extends StatelessWidget {
           crossAxisSpacing: 16,
           mainAxisSpacing: 16,
         ),
-        itemCount: items.length,
+        itemCount: filteredItems.length,
         itemBuilder: (context, index) {
-          final item = items[index];
+          final item = filteredItems[index];
           final isFavorite = favoritesProvider.isFavorite(item);
           return ItemPreview(
             item: item,

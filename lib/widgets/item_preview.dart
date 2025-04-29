@@ -37,6 +37,8 @@ class ItemPreview extends StatelessWidget {
                   Image.network(
                     item.imageUrl,
                     fit: BoxFit.cover,
+                    height: double.infinity,
+                    width: double.infinity,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         color: Colors.grey[300],

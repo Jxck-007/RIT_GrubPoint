@@ -126,11 +126,7 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                       controller: _emailController,
                       decoration: const InputDecoration(
                         labelText: 'College Email',
-<<<<<<< HEAD
-                        hintText: 'example@cse.ritchennai.edu.in',
-=======
                         hintText: 'example@ritchennai.edu.in',
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
                         filled: true,
@@ -141,13 +137,8 @@ class _StudentLoginPageState extends State<StudentLoginPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your college email';
                         }
-<<<<<<< HEAD
-                        if (!_validateEmail(value)) {
-                          return 'Please enter a valid RIT Chennai email (example@dept.ritchennai.edu.in)';
-=======
                         if (!value.endsWith('@ritchennai.edu.in')) {
                           return 'Please enter a valid RIT Chennai email (example@ritchennai.edu.in)';
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         }
                         return null;
                       },

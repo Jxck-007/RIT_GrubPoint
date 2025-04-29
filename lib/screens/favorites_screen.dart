@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
 import '../models/menu_item.dart';
-import '../item_preview.dart';
+import '../widgets/item_preview.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({Key? key}) : super(key: key);
@@ -91,13 +91,20 @@ class FavoritesScreen extends StatelessWidget {
         ),
         trailing: IconButton(
           icon: const Icon(Icons.favorite, color: Colors.red),
-          onPressed: () => favoritesProvider.removeFromFavorites(item),
+          onPressed: () => favoritesProvider.toggleFavorite(item),
         ),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => ItemPreviewPage(item: item),
+              builder: (context) => ItemPreview(
+                item: item,
+                onAddToCart: () {
+                  // TODO: Implement add to cart functionality
+                },
+                onToggleFavorite: () => favoritesProvider.toggleFavorite(item),
+                isFavorite: true,
+              ),
             ),
           );
         },

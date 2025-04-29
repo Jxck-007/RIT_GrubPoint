@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-<<<<<<< HEAD
 import 'services/gemini_service.dart';
-=======
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -42,7 +39,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
         );
       });
-<<<<<<< HEAD
 
       // Initialize Gemini service
       try {
@@ -73,35 +69,11 @@ If you don't know an answer, suggest checking the menu page or asking the cantee
         print('Error initializing Gemini: $e');
         _showErrorSnackBar('Failed to initialize Jarvix. Using simulated responses.');
       }
-=======
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
     } catch (e) {
       print('Error in initialization: $e');
     }
   }
 
-<<<<<<< HEAD
-=======
-  Future<String> getJarvixResponse(String userMessage) async {
-    // Simple response system
-    final lowerMessage = userMessage.toLowerCase();
-    
-    if (lowerMessage.contains('menu') || lowerMessage.contains('food')) {
-      return 'You can find our menu items in the home screen. We offer a variety of dishes including South Indian, North Indian, Chinese, and snacks.';
-    } else if (lowerMessage.contains('order') || lowerMessage.contains('place order')) {
-      return 'To place an order, go to the home screen, select your items, and add them to cart. Then proceed to checkout from the cart screen.';
-    } else if (lowerMessage.contains('price') || lowerMessage.contains('cost')) {
-      return 'Prices vary depending on the item. You can check the price of each item in the menu. Most items range from ₹30 to ₹100.';
-    } else if (lowerMessage.contains('time') || lowerMessage.contains('open')) {
-      return 'Our canteens are open from 8:00 AM to 8:00 PM on weekdays.';
-    } else if (lowerMessage.contains('help') || lowerMessage.contains('support')) {
-      return 'I can help you with:\n- Menu information\n- Placing orders\n- Price details\n- Operating hours\n- General queries';
-    } else {
-      return 'I\'m sorry, I didn\'t understand that. You can ask me about:\n- Today\'s menu\n- How to place an order\n- Prices\n- Operating hours\n- Or any other general questions about RIT GrubPoint.';
-    }
-  }
-
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
   void _sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
@@ -113,7 +85,6 @@ If you don't know an answer, suggest checking the menu page or asking the cantee
       _isLoading = true;
     });
 
-<<<<<<< HEAD
     // Scroll to bottom
     _scrollToBottom();
 
@@ -128,12 +99,6 @@ If you don't know an answer, suggest checking the menu page or asking the cantee
         response = GeminiService.getFallbackResponse(userMessage);
       }
 
-=======
-    _scrollToBottom();
-
-    try {
-      String response = await getJarvixResponse(userMessage);
->>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
       if (mounted) {
         setState(() {
           _messages.add(ChatMessage(text: response, isUser: false));
