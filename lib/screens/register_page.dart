@@ -144,7 +144,11 @@ class _RegisterPageState extends State<RegisterPage> {
                       controller: _emailController,
                       decoration: const InputDecoration(
                         labelText: 'College Email',
+<<<<<<< HEAD
                         hintText: 'example@cse.ritchennai.edu.in',
+=======
+                        hintText: 'example@dept.ritchennai.edu.in',
+>>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
                         filled: true,
@@ -155,8 +159,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter your college email';
                         }
+<<<<<<< HEAD
                         if (!value.endsWith('@ritchennai.edu.in')) {
                           return 'Please enter a valid RIT Chennai email';
+=======
+                        final deptEmailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@(cse|aiml|aids|ece|vlsi|mech)\.ritchennai\.edu\.in$');
+                        if (!deptEmailRegExp.hasMatch(value)) {
+                          return 'Email must be of the form example@dept.ritchennai.edu.in (dept: cse, aiml, aids, ece, vlsi, mech)';
+>>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
                         }
                         return null;
                       },

@@ -86,3 +86,9 @@ app.*.map.json
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+<<<<<<< HEAD
+=======
+
+# Environment variables
+.env
+>>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9

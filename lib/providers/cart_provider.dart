@@ -14,7 +14,7 @@ class CartProvider with ChangeNotifier {
     return _items.fold(0, (sum, item) => sum + (item.price * item.quantity));
   }
 
-  void addItem(MenuItem item) {
+  void addToCart(MenuItem item) {
     final existingItemIndex = _items.indexWhere((i) => i.id == item.id);
     if (existingItemIndex >= 0) {
       _items[existingItemIndex].quantity += 1;

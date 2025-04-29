@@ -21,6 +21,10 @@ dependencies:
   google_generative_ai: 0.2.0
   cached_network_image: ^3.3.1
   responsive_framework: ^1.4.0
+<<<<<<< HEAD
+=======
+  http: ^1.1.0
+>>>>>>> ee47cadfc7141dbdf450a21f77a6f5469d4e36f9
 
 dev_dependencies:
   flutter_test:
