@@ -13,34 +13,58 @@ class FavoritesPage extends StatelessWidget {
         final favorites = favoritesProvider.favoriteItems;
         
         if (favorites.isEmpty) {
-          return const Center(
-            child: Text(
-              'No favorites yet',
-              style: TextStyle(fontSize: 18),
+          return Container(
+            width: double.infinity,
+            color: Colors.grey[50],
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.favorite,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No favorites yet!',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Start adding some items to your favorites',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
-        return GridView.builder(
-          padding: const EdgeInsets.all(16),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 0.75,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-          ),
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: favorites.length,
           itemBuilder: (context, index) {
             final item = favorites[index];
-            return ItemPreview(
-              item: item,
-              onAddToCart: () {
-                // TODO: Implement add to cart functionality
-              },
-              onToggleFavorite: () {
-                favoritesProvider.toggleFavorite(item);
-              },
-              isFavorite: true,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: ItemPreview(
+                item: item,
+                onAddToCart: () {
+                  // TODO: Implement add to cart functionality
+                },
+                onToggleFavorite: () {
+                  favoritesProvider.toggleFavorite(item);
+                },
+                isFavorite: true,
+              ),
             );
           },
         );

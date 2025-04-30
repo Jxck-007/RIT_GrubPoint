@@ -24,28 +24,25 @@ class CategoryItemsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(category),
       ),
-      body: GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
+      body: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index];
           final isFavorite = favoritesProvider.isFavorite(item);
-          return ItemPreview(
-            item: item,
-            onAddToCart: () {
-              cartProvider.addToCart(item);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${item.name} added to cart')),
-              );
-            },
-            onToggleFavorite: () => favoritesProvider.toggleFavorite(item),
-            isFavorite: isFavorite,
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ItemPreview(
+              item: item,
+              onAddToCart: () {
+                cartProvider.addToCart(item);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('${item.name} added to cart')),
+                );
+              },
+              onToggleFavorite: () => favoritesProvider.toggleFavorite(item),
+              isFavorite: isFavorite,
+            ),
           );
         },
       ),
