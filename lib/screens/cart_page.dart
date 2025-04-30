@@ -47,20 +47,35 @@ class CartPage extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        leading: Image.network(
-          item.imageUrl,
-          width: 56,
-          height: 56,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 56,
-              height: 56,
-              color: Colors.grey[300],
-              child: const Icon(Icons.restaurant),
-            );
-          },
-        ),
+        leading: item.imageUrl.startsWith('assets/')
+            ? Image.asset(
+                item.imageUrl,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 56,
+                    height: 56,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant),
+                  );
+                },
+              )
+            : Image.network(
+                item.imageUrl,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 56,
+                    height: 56,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.restaurant),
+                  );
+                },
+              ),
         title: Text(item.name),
         subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
         trailing: IconButton(

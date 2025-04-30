@@ -28,12 +28,35 @@ class CartPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final item = items[index];
                         return ListTile(
-                          leading: Image.network(
-                            item.imageUrl ?? 'https://via.placeholder.com/150',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
+                          leading: item.imageUrl.startsWith('assets/')
+                              ? Image.asset(
+                                  item.imageUrl,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.restaurant),
+                                    );
+                                  },
+                                )
+                              : Image.network(
+                                  item.imageUrl,
+                                  width: 50,
+                                  height: 50,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      width: 50,
+                                      height: 50,
+                                      color: Colors.grey[300],
+                                      child: const Icon(Icons.restaurant),
+                                    );
+                                  },
+                                ),
                           title: Text(item.name ?? 'Unnamed Item'),
                           subtitle: Text(
                             '₹${(item.price * item.quantity).toStringAsFixed(2)}',

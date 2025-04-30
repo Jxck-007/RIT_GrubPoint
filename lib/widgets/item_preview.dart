@@ -44,20 +44,35 @@ class ItemPreview extends StatelessWidget {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        item.imageUrl,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            width: 56,
-                            height: 56,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.restaurant, size: 32, color: Colors.grey),
-                          );
-                        },
-                      ),
+                      child: item.imageUrl.startsWith('assets/')
+                          ? Image.asset(
+                              item.imageUrl,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 56,
+                                  height: 56,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.restaurant, size: 32, color: Colors.grey),
+                                );
+                              },
+                            )
+                          : Image.network(
+                              item.imageUrl,
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  width: 56,
+                                  height: 56,
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.restaurant, size: 32, color: Colors.grey),
+                                );
+                              },
+                            ),
                     ),
                     // Favorite icon overlay (optional, can be removed if not needed)
                   ],

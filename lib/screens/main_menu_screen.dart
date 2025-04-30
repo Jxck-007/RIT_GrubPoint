@@ -177,18 +177,31 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             width: double.infinity,
             child: Stack(
               children: [
-                Image.network(
-                  item.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Text('Image not available'),
+                item.imageUrl.startsWith('assets/')
+                    ? Image.asset(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Text('Image not available'),
+                            ),
+                          );
+                        },
+                      )
+                    : Image.network(
+                        item.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: Text('Image not available'),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
                 Positioned(
                   top: 8,
                   right: 8,
