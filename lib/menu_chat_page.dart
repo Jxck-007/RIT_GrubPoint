@@ -2,52 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/chat_service.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({Key? key}) : super(key: key);
+class MenuChatPage extends StatefulWidget {
+  const MenuChatPage({super.key});
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  State<MenuChatPage> createState() => _MenuChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _MenuChatPageState extends State<MenuChatPage> {
   final TextEditingController _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isLoading = false;
-  late String _userName = 'User';
+  String? _userName;
 
   @override
   void initState() {
     super.initState();
-    _initializeChat();
+    _loadChatHistory();
+    _loadUserName();
   }
 
-  Future<void> _initializeChat() async {
-    try {
-      // Load user name from shared preferences
-      final prefs = await SharedPreferences.getInstance();
-      setState(() {
-        _userName = prefs.getString('user_name') ?? 'User';
-      });
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_name');
+    });
+    await ChatService.updateUserName();
+  }
 
-      // Add initial greeting
+  Future<void> _loadChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedMessages = prefs.getStringList('chat_history');
+    if (savedMessages != null) {
       setState(() {
-        _messages.add(
-          ChatMessage(
-            text: 'Hi! I\'m your menu assistant. Ask me anything about our food options, prices, or special dishes!',
-            isUser: false,
-          ),
+        _messages.addAll(
+          savedMessages.map((msg) {
+            final parts = msg.split(': ');
+            return ChatMessage(
+              text: parts[1],
+              isUser: parts[0] == (_userName ?? 'User'),
+            );
+          }),
         );
       });
-    } catch (e) {
-      print('Error in initialization: $e');
     }
   }
 
-  void _sendMessage() async {
+  Future<void> _saveChatHistory() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'chat_history',
+      _messages.map((msg) => '${msg.isUser ? (_userName ?? 'User') : 'Menu Assistant'}: ${msg.text}').toList(),
+    );
+  }
+
+  Future<void> sendMessage() async {
     if (_messageController.text.trim().isEmpty) return;
 
-    final userMessage = _messageController.text.trim();
+    final userMessage = _messageController.text;
     _messageController.clear();
 
     setState(() {
@@ -55,61 +67,22 @@ class _ChatPageState extends State<ChatPage> {
       _isLoading = true;
     });
 
-    // Scroll to bottom
-    _scrollToBottom();
-
     try {
-      // Get response from local chat service
       final response = ChatService.getResponse(userMessage);
-
-      if (mounted) {
-        setState(() {
-          _messages.add(ChatMessage(text: response, isUser: false));
-          _isLoading = false;
-        });
-        _scrollToBottom();
-      }
+      setState(() {
+        _messages.add(ChatMessage(text: response, isUser: false));
+        _isLoading = false;
+      });
+      await _saveChatHistory();
     } catch (e) {
-      print('Error sending message: $e');
-      if (mounted) {
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              text: 'Sorry, I couldn\'t process your request. Please try again.',
-              isUser: false,
-            ),
-          );
-          _isLoading = false;
-        });
-        _scrollToBottom();
-        _showErrorSnackBar('Failed to get response');
-      }
+      setState(() {
+        _messages.add(ChatMessage(
+          text: 'Sorry, I encountered an error. Please try again.',
+          isUser: false,
+        ));
+        _isLoading = false;
+      });
     }
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
   }
 
   @override
@@ -158,15 +131,14 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 )
               : ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                  padding: const EdgeInsets.all(8),
                   itemCount: _messages.length,
                   itemBuilder: (context, index) {
                     final message = _messages[index];
                     return ChatBubble(
                       message: message.text,
                       isUser: message.isUser,
-                      userName: message.isUser ? _userName : 'Menu Assistant',
+                      userName: message.isUser ? (_userName ?? 'User') : 'Menu Assistant',
                     );
                   },
                 ),
@@ -234,7 +206,7 @@ class _ChatPageState extends State<ChatPage> {
                     textCapitalization: TextCapitalization.sentences,
                     maxLines: null,
                     textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _sendMessage(),
+                    onSubmitted: (_) => sendMessage(),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -243,7 +215,7 @@ class _ChatPageState extends State<ChatPage> {
                   radius: 22,
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                    onPressed: _sendMessage,
+                    onPressed: sendMessage,
                   ),
                 ),
               ],
@@ -283,10 +255,10 @@ class ChatBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isUser) ...[
-            CircleAvatar(
+            const CircleAvatar(
               backgroundColor: Colors.deepPurple,
               radius: 18,
-              child: const Icon(
+              child: Icon(
                 Icons.restaurant_menu,
                 color: Colors.white,
                 size: 18,
@@ -343,4 +315,4 @@ class ChatBubble extends StatelessWidget {
       ),
     );
   }
-} 
+}

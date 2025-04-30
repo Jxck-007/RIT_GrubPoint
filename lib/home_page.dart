@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart' hide Widget;
 import 'package:flutter/widgets.dart' show Widget;
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'models/menu_item.dart';
 import 'providers/cart_provider.dart';
 import 'widgets/item_preview.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/menu_provider.dart';
 import 'screens/category_items_screen.dart';
-import 'data/menu_data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -253,33 +251,34 @@ class _HomePageState extends State<HomePage> {
       body: Column(
         children: [
           // Search Bar
-          Material(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search for food...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.surface,
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search for food...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
+                filled: true,
+                fillColor: Colors.grey[200],
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
               ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
             ),
           ),
           // Category Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: _categories.map((category) {
                 final isSelected = category == _selectedCategory;
@@ -293,26 +292,32 @@ class _HomePageState extends State<HomePage> {
                         _selectedCategory = selected ? category : 'All';
                       });
                     },
-                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundColor: Colors.white,
                     selectedColor: Theme.of(context).colorScheme.primaryContainer,
                     checkmarkColor: Theme.of(context).colorScheme.primary,
+                    side: BorderSide(
+                      color: isSelected ? Colors.transparent : Colors.grey[300]!,
+                    ),
                     labelStyle: TextStyle(
                       color: isSelected
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurface,
+                          : Colors.black87,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                   ),
                 );
               }).toList(),
             ),
           ),
+          const SizedBox(height: 8),
           // Menu Items Grid
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.all(16),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.7,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
