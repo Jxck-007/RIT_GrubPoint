@@ -34,13 +34,11 @@ class ItemPreview extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Image with favorite button
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
                   child: Image.network(
                     item.imageUrl,
                     height: 120,
@@ -49,8 +47,8 @@ class ItemPreview extends StatelessWidget {
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         height: 120,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.restaurant, size: 40),
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.restaurant, size: 32),
                       );
                     },
                   ),
@@ -62,6 +60,13 @@ class ItemPreview extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: IconButton(
                       icon: Icon(
@@ -70,16 +75,14 @@ class ItemPreview extends StatelessWidget {
                         size: 20,
                       ),
                       onPressed: onToggleFavorite,
-                      constraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 32,
-                      ),
                       padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
                   ),
                 ),
               ],
             ),
+            // Item details
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -113,41 +116,17 @@ class ItemPreview extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
                         ),
                       ),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber[600],
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            item.rating.toString(),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.add_shopping_cart),
+                        color: Colors.deepPurple,
+                        onPressed: onAddToCart,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: IconButton(
-                      onPressed: onAddToCart,
-                      icon: const Icon(Icons.add_shopping_cart, size: 20),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.deepPurple.withOpacity(0.1),
-                        foregroundColor: Colors.deepPurple,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -161,74 +140,63 @@ class ItemPreview extends StatelessWidget {
 
 class ItemPreviewPage extends StatelessWidget {
   final MenuItem item;
-  const ItemPreviewPage({required this.item, super.key});
+
+  const ItemPreviewPage({Key? key, required this.item}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(item.name)),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Image.network(
+      appBar: AppBar(
+        title: Text(item.name),
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Image.network(
               item.imageUrl,
+              width: double.infinity,
+              height: 300,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
                 return Container(
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.restaurant, size: 100),
+                  height: 300,
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.restaurant, size: 64),
                 );
               },
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  item.description,
-                  style: const TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 20),
-                    const SizedBox(width: 4),
-                    Text(item.rating.toStringAsFixed(1)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '₹${item.price.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                if (item.isAvailable)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
-                    child: const Text('Add to Cart'),
-                  )
-                else
-                  const Text(
-                    'Currently Not Available',
-                    style: TextStyle(color: Colors.red, fontSize: 16),
                   ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '₹${item.price.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    item.description,
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

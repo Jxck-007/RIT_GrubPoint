@@ -34,7 +34,7 @@ class _ChatPageState extends State<ChatPage> {
       setState(() {
         _messages.add(
           ChatMessage(
-            text: 'Hi! I\'m your menu assistant. Ask me anything about our food options, prices, or special dishes!',
+            text: 'Hi! I\'m Jarvix, your food assistant. Ask me anything about our food options, prices, or special dishes!',
             isUser: false,
           ),
         );
@@ -166,7 +166,7 @@ class _ChatPageState extends State<ChatPage> {
                     return ChatBubble(
                       message: message.text,
                       isUser: message.isUser,
-                      userName: message.isUser ? _userName : 'Menu Assistant',
+                      userName: message.isUser ? _userName : 'Jarvix',
                     );
                   },
                 ),
@@ -178,7 +178,7 @@ class _ChatPageState extends State<ChatPage> {
               children: [
                 const SizedBox(width: 16),
                 Text(
-                  'Menu Assistant is typing',
+                  'Jarvix is typing',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontStyle: FontStyle.italic,

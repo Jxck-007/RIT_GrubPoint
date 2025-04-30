@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/menu_item.dart';
+import '../data/menu_data.dart';
 
 class MenuProvider extends ChangeNotifier {
   String _searchQuery = '';
@@ -10,63 +11,8 @@ class MenuProvider extends ChangeNotifier {
   bool _showNonVegOnly = false;
   double _minRatingFilter = 0.0;
   
-  // Sample menu items for now
-  final List<MenuItem> _menuItems = [
-    MenuItem(
-      id: 1,
-      name: 'Margherita Pizza',
-      description: 'Classic cheese pizza with tomato sauce',
-      price: 299,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Pizza',
-      rating: 4.5,
-    ),
-    MenuItem(
-      id: 2,
-      name: 'Chicken Burger',
-      description: 'Grilled chicken burger with lettuce and mayo',
-      price: 199,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Burger',
-      rating: 4.2,
-    ),
-    MenuItem(
-      id: 3,
-      name: 'Caesar Salad',
-      description: 'Fresh salad with chicken and caesar dressing',
-      price: 149,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Salad',
-      rating: 4.0,
-    ),
-    MenuItem(
-      id: 4,
-      name: 'Chocolate Milkshake',
-      description: 'Rich and creamy chocolate milkshake',
-      price: 99,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Beverage',
-      rating: 4.8,
-    ),
-    MenuItem(
-      id: 5,
-      name: 'Veg Biryani',
-      description: 'Fragrant rice dish with vegetables and spices',
-      price: 249,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Indian',
-      rating: 4.6,
-    ),
-    MenuItem(
-      id: 6,
-      name: 'Chicken Tikka',
-      description: 'Marinated chicken pieces grilled to perfection',
-      price: 349,
-      imageUrl: 'https://via.placeholder.com/150',
-      category: 'Indian',
-      rating: 4.7,
-    ),
-  ];
+  // Use demoMenuItems from menu_data.dart
+  List<MenuItem> get _menuItems => demoMenuItems;
   
   // Getters
   String get searchQuery => _searchQuery;
@@ -154,9 +100,7 @@ class MenuProvider extends ChangeNotifier {
   }
   
   // Get all unique restaurant categories
-  List<String> get allRestaurants {
-    final restaurants = _menuItems.map((item) => item.category).toSet().toList();
-    restaurants.sort();
-    return restaurants;
+  List<String> getRestaurantCategories() {
+    return _menuItems.map((item) => item.category).toSet().toList();
   }
 } 

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/cart_provider.dart';
+import '../providers/favorites_provider.dart';
+import '../providers/menu_provider.dart';
+import '../screens/category_items_screen.dart';
+import '../data/menu_data.dart';
 import '../home_page.dart';
 import '../cart_page.dart';
 import '../chat_page.dart';
-import '../screens/favorites_screen.dart';
 import '../profile_page.dart';
-import 'category_items_screen.dart';
 import '../services/firebase_service.dart';
 import '../favorites_page.dart';
 import 'settings_page.dart';
@@ -251,7 +254,7 @@ class _MainNavigationState extends State<MainNavigation> {
                     MaterialPageRoute(
                       builder: (context) => CategoryItemsScreen(
                         category: category['name']!,
-                        items: const [], // We'll update this with actual items
+                        items: demoMenuItems.where((item) => item.category == category['name']).toList(),
                       ),
                     ),
                   );

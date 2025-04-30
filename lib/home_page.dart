@@ -311,25 +311,22 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 8),
-          // Menu Items Grid
+          // Menu Items List
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-              ),
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: filteredItems.length,
               itemBuilder: (context, index) {
                 final item = filteredItems[index];
                 final isFavorite = favoritesProvider.isFavorite(item);
-                return ItemPreview(
-                  item: item,
-                  onAddToCart: () => _addToCart(item),
-                  onToggleFavorite: () => _toggleFavorite(item),
-                  isFavorite: isFavorite,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: ItemPreview(
+                    item: item,
+                    onAddToCart: () => _addToCart(item),
+                    onToggleFavorite: () => _toggleFavorite(item),
+                    isFavorite: isFavorite,
+                  ),
                 );
               },
             ),
