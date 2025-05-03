@@ -10,79 +10,63 @@ class CartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<CartProvider>(
       builder: (context, cart, child) {
-        final cartItems = cart.items;
-        
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('My Cart'),
-          ),
-          body: cartItems.isEmpty
+          body: cart.items.isEmpty
               ? const Center(
                   child: Text('Your cart is empty'),
                 )
               : ListView.builder(
-                  itemCount: cartItems.length,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: cart.items.length,
                   itemBuilder: (context, index) {
-                    final item = cartItems[index];
-                    return _buildCartItem(context, item, cart);
+                    final item = cart.items[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: AssetImage(item.imageUrl),
+                        ),
+                        title: Text(item.name),
+                        subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.remove_circle_outline),
+                          onPressed: () => cart.removeFromCart(item),
+                        ),
+                      ),
+                    );
                   },
                 ),
-          bottomNavigationBar: cartItems.isNotEmpty
-              ? Container(
+          bottomNavigationBar: cart.items.isEmpty
+              ? null
+              : Container(
                   padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Handle checkout
-                    },
-                    child: const Text('Proceed to Checkout'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Total: ₹${cart.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          // TODO: Implement checkout
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Checkout functionality coming soon!'),
+                            ),
+                          );
+                        },
+                        child: const Text('Checkout'),
+                      ),
+                    ],
                   ),
-                )
-              : null,
+                ),
         );
       },
-    );
-  }
-
-  Widget _buildCartItem(BuildContext context, MenuItem item, CartProvider cart) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        leading: item.imageUrl.startsWith('assets/')
-            ? Image.asset(
-                item.imageUrl,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant),
-                  );
-                },
-              )
-            : Image.network(
-                item.imageUrl,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant),
-                  );
-                },
-              ),
-        title: Text(item.name),
-        subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
-        trailing: IconButton(
-          icon: const Icon(Icons.remove_circle_outline),
-          onPressed: () => cart.removeItem(item),
-        ),
-      ),
     );
   }
 } 

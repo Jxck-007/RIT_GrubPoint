@@ -10,120 +10,38 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Consumer<FavoritesProvider>(
-      builder: (context, favoritesProvider, child) {
-        final favoriteItems = favoritesProvider.favoriteItems;
-
+      builder: (context, favorites, child) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('My Favorites'),
+            title: const Text('Favorites'),
           ),
-          body: favoriteItems.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.favorite,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No favorites yet!',
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Start adding some items to your favorites',
-                        style: TextStyle(
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
+          body: favorites.favorites.isEmpty
+              ? const Center(
+                  child: Text('No favorites yet'),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: favoriteItems.length,
+                  itemCount: favorites.favorites.length,
                   itemBuilder: (context, index) {
-                    final item = favoriteItems[index];
-                    return _buildFavoriteItem(context, item, favoritesProvider);
+                    final item = favorites.favorites[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: AssetImage(item.imageUrl),
+                        ),
+                        title: Text(item.name),
+                        subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.favorite, color: Colors.red),
+                          onPressed: () => favorites.toggleFavorite(item),
+                        ),
+                      ),
+                    );
                   },
                 ),
         );
       },
-    );
-  }
-
-  Widget _buildFavoriteItem(BuildContext context, MenuItem item, FavoritesProvider favoritesProvider) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: item.imageUrl.startsWith('assets/')
-            ? Image.asset(
-                item.imageUrl,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant),
-                  );
-                },
-              )
-            : Image.network(
-                item.imageUrl,
-                width: 56,
-                height: 56,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 56,
-                    height: 56,
-                    color: Colors.grey[300],
-                    child: const Icon(Icons.restaurant),
-                  );
-                },
-              ),
-        title: Text(item.name),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('₹${item.price.toStringAsFixed(2)}'),
-            Row(
-              children: [
-                const Icon(Icons.star, size: 16, color: Colors.amber),
-                Text(' ${item.rating.toStringAsFixed(1)}'),
-              ],
-            ),
-          ],
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.favorite, color: Colors.red),
-          onPressed: () => favoritesProvider.toggleFavorite(item),
-        ),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ItemPreview(
-                item: item,
-                onAddToCart: () {
-                  // TODO: Implement add to cart functionality
-                },
-                onToggleFavorite: () => favoritesProvider.toggleFavorite(item),
-                isFavorite: true,
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 } 

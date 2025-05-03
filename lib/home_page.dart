@@ -7,6 +7,8 @@ import 'widgets/item_preview.dart';
 import 'providers/favorites_provider.dart';
 import 'providers/menu_provider.dart';
 import 'screens/category_items_screen.dart';
+import 'providers/theme_provider.dart';
+import 'data/menu_data.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -92,26 +94,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final menuProvider = Provider.of<MenuProvider>(context);
-    final cartProvider = Provider.of<CartProvider>(context);
-    final favoritesProvider = Provider.of<FavoritesProvider>(context);
-    
-    // Get all menu items
-    final allItems = menuProvider.getFilteredItems();
-    
-    // Filter items based on selected category
-    final items = _selectedCategory == 'All' 
-        ? allItems 
-        : allItems.where((item) => item.category == _selectedCategory).toList();
-    
-    // Filter items based on search query
-    final filteredItems = _searchQuery.isEmpty
-        ? items
-        : items.where((item) => 
-            item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            item.description.toLowerCase().contains(_searchQuery.toLowerCase())
-          ).toList();
-    
+    final List<String> categories = ['All', ...getRestaurantNames()];
+    final List<MenuItem> menuItems = _selectedCategory == 'All'
+        ? demoMenuItems
+        : getMenuItemsByRestaurant(_selectedCategory);
+    final List<MenuItem> filteredItems = menuItems.where((item) {
+      final matchesSearch = _searchQuery.isEmpty ||
+          item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesSearch;
+    }).toList();
+
     return Scaffold(
       drawer: Drawer(
         child: ListView(
@@ -250,23 +243,18 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Column(
         children: [
-          // Search Bar
+          // Search bar
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Search for food...',
+                hintText: 'Search food items...',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(10),
                 ),
                 filled: true,
-                fillColor: Colors.grey[200],
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
+                fillColor: Theme.of(context).colorScheme.surface,
               ),
               onChanged: (value) {
                 setState(() {
@@ -275,60 +263,169 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          // Category Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
+          // Category filter chips
+          Container(
+            height: 50,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: _categories.map((category) {
-                final isSelected = category == _selectedCategory;
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: categories.length,
+              itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
-                    label: Text(category),
-                    selected: isSelected,
+                    label: Text(categories[index]),
+                    selected: _selectedCategory == categories[index],
                     onSelected: (selected) {
                       setState(() {
-                        _selectedCategory = selected ? category : 'All';
+                        _selectedCategory = categories[index];
                       });
                     },
-                    backgroundColor: Colors.white,
                     selectedColor: Theme.of(context).colorScheme.primaryContainer,
                     checkmarkColor: Theme.of(context).colorScheme.primary,
-                    side: BorderSide(
-                      color: isSelected ? Colors.transparent : Colors.grey[300]!,
-                    ),
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.black87,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Menu Items List
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: filteredItems.length,
-              itemBuilder: (context, index) {
-                final item = filteredItems[index];
-                final isFavorite = favoritesProvider.isFavorite(item);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: ItemPreview(
-                    item: item,
-                    onAddToCart: () => _addToCart(item),
-                    onToggleFavorite: () => _toggleFavorite(item),
-                    isFavorite: isFavorite,
                   ),
                 );
               },
+            ),
+          ),
+          // Menu items
+          Expanded(
+            child: filteredItems.isEmpty
+                ? const Center(
+                    child: Text('No items found'),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      final item = filteredItems[index];
+                      return _buildMenuItem(item);
+                    },
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(MenuItem item) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Food image
+          SizedBox(
+            height: 180,
+            width: double.infinity,
+            child: Stack(
+              children: [
+                Image.asset(
+                  item.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.restaurant, size: 50),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Consumer<FavoritesProvider>(
+                    builder: (context, favoritesProvider, child) {
+                      final isFavorite = favoritesProvider.isFavorite(item);
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.grey,
+                          ),
+                          onPressed: () => favoritesProvider.toggleFavorite(item),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Name and rating
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        Text('${item.rating}'),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Description
+                Text(
+                  item.description,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                // Price and add to cart button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '₹${item.price.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                    Consumer<CartProvider>(
+                      builder: (context, cart, child) {
+                        return ElevatedButton.icon(
+                          icon: const Icon(Icons.add_shopping_cart),
+                          label: const Text('Add to Cart'),
+                          onPressed: () {
+                            cart.addToCart(item);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${item.name} added to cart'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

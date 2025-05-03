@@ -5,9 +5,8 @@ class MenuItem {
   final double price;
   final String imageUrl;
   final String category;
-  final bool isAvailable;
   final double rating;
-  int quantity;
+  final bool isAvailable;
 
   MenuItem({
     required this.id,
@@ -16,10 +15,19 @@ class MenuItem {
     required this.price,
     required this.imageUrl,
     required this.category,
+    required this.rating,
     this.isAvailable = true,
-    this.rating = 0.0,
-    this.quantity = 1,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MenuItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 
   MenuItem copyWith({
     int? id,
@@ -30,7 +38,6 @@ class MenuItem {
     String? category,
     bool? isAvailable,
     double? rating,
-    int? quantity,
   }) {
     return MenuItem(
       id: id ?? this.id,
@@ -41,7 +48,6 @@ class MenuItem {
       category: category ?? this.category,
       isAvailable: isAvailable ?? this.isAvailable,
       rating: rating ?? this.rating,
-      quantity: quantity ?? this.quantity,
     );
   }
 } 

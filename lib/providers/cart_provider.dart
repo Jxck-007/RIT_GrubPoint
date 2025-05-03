@@ -3,47 +3,52 @@ import '../models/menu_item.dart';
 
 class CartProvider with ChangeNotifier {
   final List<MenuItem> _items = [];
+  final Map<int, int> _quantities = {};
 
   List<MenuItem> get items => _items;
 
   int get itemCount {
-    return _items.fold(0, (sum, item) => sum + item.quantity);
+    return _quantities.values.fold(0, (sum, quantity) => sum + quantity);
   }
 
   double get totalAmount {
-    return _items.fold(0, (sum, item) => sum + (item.price * item.quantity));
+    return _items.fold(0.0, (sum, item) => sum + (item.price * (_quantities[item.id] ?? 1)));
+  }
+
+  int getQuantity(MenuItem item) {
+    return _quantities[item.id] ?? 1;
   }
 
   void addToCart(MenuItem item) {
-    final existingItemIndex = _items.indexWhere((i) => i.id == item.id);
-    if (existingItemIndex >= 0) {
-      _items[existingItemIndex].quantity += 1;
-    } else {
+    if (!_items.contains(item)) {
       _items.add(item);
+      _quantities[item.id] = 1;
+    } else {
+      _quantities[item.id] = (_quantities[item.id] ?? 0) + 1;
     }
     notifyListeners();
   }
 
-  void removeItem(MenuItem item) {
+  void removeFromCart(MenuItem item) {
     _items.remove(item);
+    _quantities.remove(item.id);
     notifyListeners();
   }
 
   void incrementQuantity(int itemId) {
-    final itemIndex = _items.indexWhere((i) => i.id == itemId);
-    if (itemIndex >= 0) {
-      _items[itemIndex].quantity += 1;
+    if (_quantities.containsKey(itemId)) {
+      _quantities[itemId] = (_quantities[itemId] ?? 0) + 1;
       notifyListeners();
     }
   }
 
   void decrementQuantity(int itemId) {
-    final itemIndex = _items.indexWhere((i) => i.id == itemId);
-    if (itemIndex >= 0) {
-      if (_items[itemIndex].quantity > 1) {
-        _items[itemIndex].quantity -= 1;
+    if (_quantities.containsKey(itemId)) {
+      if (_quantities[itemId]! > 1) {
+        _quantities[itemId] = _quantities[itemId]! - 1;
       } else {
-        _items.removeAt(itemIndex);
+        final item = _items.firstWhere((i) => i.id == itemId);
+        removeFromCart(item);
       }
       notifyListeners();
     }
@@ -51,6 +56,7 @@ class CartProvider with ChangeNotifier {
 
   void clearCart() {
     _items.clear();
+    _quantities.clear();
     notifyListeners();
   }
 } 

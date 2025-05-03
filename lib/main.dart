@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -26,7 +25,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +37,14 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
       ],
       child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, _) {
+        builder: (context, themeProvider, child) {
           return MaterialApp(
             title: 'RIT GrubPoint',
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepPurple,
+                brightness: themeProvider.isDarkMode ? Brightness.dark : Brightness.light,
+              ),
               useMaterial3: true,
             ),
             darkTheme: ThemeData.dark(useMaterial3: true),

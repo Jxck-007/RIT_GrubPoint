@@ -144,241 +144,35 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Profile'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        actions: [
-          if (_isEditing)
-            IconButton(
-              icon: const Icon(Icons.save),
-              onPressed: _saveProfile,
-              tooltip: 'Save Profile',
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                setState(() {
-                  _isEditing = true;
-                });
-              },
-              tooltip: 'Edit Profile',
-            ),
-        ],
+        title: const Text('Profile'),
       ),
-      body: _isLoading 
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile header with avatar
-                  Center(
-                    child: Column(
-                      children: [
-                        const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.deepPurple,
-                          child: Icon(Icons.person, size: 50, color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        _isEditing
-                            ? Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 40.0),
-                                child: TextField(
-                                  controller: _nameController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Name',
-                                    hintText: 'Enter your name',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            : Text(
-                                _nameController.text,
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                        Text(
-                          _emailController.text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  const Text(
-                    "Settings & Preferences",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Quick Links
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.notifications, color: Colors.deepPurple),
-                          title: const Text('Notifications'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const NotificationsScreen()),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.star, color: Colors.amber),
-                          title: const Text('My Reviews'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ReviewsScreen()),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.calendar_today, color: Colors.green),
-                          title: const Text('My Reservations'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ReservationScreen()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  const Text(
-                    "Account Information",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Account Settings
-                  Card(
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const Icon(Icons.person, color: Colors.blue),
-                          title: const Text('Change Name'),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            setState(() {
-                              _isEditing = true;
-                            });
-                          },
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.phone, color: Colors.green),
-                          title: const Text('Contact Information'),
-                          subtitle: Text(_phoneController.text),
-                          trailing: const Icon(Icons.chevron_right),
-                          onTap: () {
-                            // Show dialog to edit phone number
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('Edit Phone Number'),
-                                content: TextField(
-                                  controller: _phoneController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Phone Number',
-                                    hintText: 'Enter your phone number',
-                                  ),
-                                  keyboardType: TextInputType.phone,
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pop(context);
-                                      _saveProfile();
-                                    },
-                                    child: const Text('Save'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                        const Divider(height: 1),
-                        ListTile(
-                          leading: const Icon(Icons.logout, color: Colors.red),
-                          title: const Text('Logout'),
-                          onTap: _logout,
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Firebase status indicator
-                  if (!_isFirebaseAvailable) ...[
-                    const SizedBox(height: 24),
-                    Card(
-                      color: Colors.orange[100],
-                      child: const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Row(
-                          children: [
-                            Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                            SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Firebase Unavailable',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Some profile features may be limited. Profile data will be saved locally.',
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 50,
+              child: Icon(Icons.person, size: 50),
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Profile Page',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
+            SizedBox(height: 8),
+            Text(
+              'Coming soon!',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 } 

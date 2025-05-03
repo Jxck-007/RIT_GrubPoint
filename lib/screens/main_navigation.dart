@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
-import '../providers/cart_provider.dart';
-import '../providers/favorites_provider.dart';
-import '../providers/menu_provider.dart';
 import '../screens/category_items_screen.dart';
 import '../data/menu_data.dart';
 import '../home_page.dart';

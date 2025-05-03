@@ -36,7 +36,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     }).toList();
 
     final List<Widget> pages = [
-      _buildMenuPage(),
+      _buildMenuPage(filteredItems, categories),
       const CartPage(),
       const FavoritesScreen(),
       const ChatScreen(),
@@ -61,7 +61,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       body: pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.deepPurple,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
         onTap: (index) {
@@ -91,19 +91,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  Widget _buildMenuPage() {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final List<String> categories = ['All', ...getRestaurantNames()];
-    final List<MenuItem> menuItems = _selectedCategory == 'All'
-        ? demoMenuItems
-        : getMenuItemsByRestaurant(_selectedCategory);
-    final List<MenuItem> filteredItems = menuItems.where((item) {
-      final matchesSearch = _searchQuery.isEmpty ||
-          item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      return matchesSearch;
-    }).toList();
-
+  Widget _buildMenuPage(List<MenuItem> filteredItems, List<String> categories) {
     return Column(
       children: [
         // Search bar
@@ -117,7 +105,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
               filled: true,
-              fillColor: Colors.grey[100],
+              fillColor: Theme.of(context).colorScheme.surface,
             ),
             onChanged: (value) {
               setState(() {
@@ -144,6 +132,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                       _selectedCategory = categories[index];
                     });
                   },
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  checkmarkColor: Theme.of(context).colorScheme.primary,
                 ),
               );
             },
@@ -151,14 +141,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         ),
         // Menu items
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: filteredItems.length,
-            itemBuilder: (context, index) {
-              final item = filteredItems[index];
-              return _buildMenuItem(item);
-            },
-          ),
+          child: filteredItems.isEmpty
+              ? const Center(
+                  child: Text('No items found'),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: filteredItems.length,
+                  itemBuilder: (context, index) {
+                    final item = filteredItems[index];
+                    return _buildMenuItem(item);
+                  },
+                ),
         ),
       ],
     );
@@ -177,31 +171,18 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             width: double.infinity,
             child: Stack(
               children: [
-                item.imageUrl.startsWith('assets/')
-                    ? Image.asset(
-                        item.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Text('Image not available'),
-                            ),
-                          );
-                        },
-                      )
-                    : Image.network(
-                        item.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[300],
-                            child: const Center(
-                              child: Text('Image not available'),
-                            ),
-                          );
-                        },
+                Image.asset(
+                  item.imageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.restaurant, size: 50),
                       ),
+                    );
+                  },
+                ),
                 Positioned(
                   top: 8,
                   right: 8,
@@ -227,7 +208,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ],
             ),
           ),
-          
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -256,7 +236,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                
                 // Description
                 Text(
                   item.description,
@@ -265,7 +244,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                
                 // Price and add to cart button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

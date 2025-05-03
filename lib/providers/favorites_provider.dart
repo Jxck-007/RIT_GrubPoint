@@ -2,31 +2,20 @@ import 'package:flutter/foundation.dart';
 import '../models/menu_item.dart';
 
 class FavoritesProvider with ChangeNotifier {
-  final List<MenuItem> _favoriteItems = [];
+  final List<MenuItem> _favorites = [];
 
-  List<MenuItem> get favoriteItems => _favoriteItems;
+  List<MenuItem> get favorites => _favorites;
 
   bool isFavorite(MenuItem item) {
-    return _favoriteItems.any((favorite) => favorite.id == item.id);
-  }
-
-  void addToFavorites(MenuItem item) {
-    if (!isFavorite(item)) {
-      _favoriteItems.add(item);
-      notifyListeners();
-    }
-  }
-
-  void removeFromFavorites(MenuItem item) {
-    _favoriteItems.removeWhere((favorite) => favorite.id == item.id);
-    notifyListeners();
+    return _favorites.any((favorite) => favorite.id == item.id);
   }
 
   void toggleFavorite(MenuItem item) {
     if (isFavorite(item)) {
-      removeFromFavorites(item);
+      _favorites.removeWhere((favorite) => favorite.id == item.id);
     } else {
-      addToFavorites(item);
+      _favorites.add(item);
     }
+    notifyListeners();
   }
 } 
