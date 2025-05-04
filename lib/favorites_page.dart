@@ -12,12 +12,16 @@ class FavoritesPage extends StatelessWidget {
     return Consumer<FavoritesProvider>(
       builder: (context, favorites, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Favorites'),
-          ),
           body: favorites.favorites.isEmpty
               ? const Center(
-                  child: Text('No favorites yet'),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.favorite_border, size: 64, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('No favorites yet'),
+                    ],
+                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),

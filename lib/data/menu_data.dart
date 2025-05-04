@@ -1,11 +1,47 @@
 import '../models/menu_item.dart';
 
-final Map<String, String> shopImages = {
-  'Calcutta in a Box': 'assets/shops/calcutta_in_a_box.jpg',
-  'Cantina de Naples': 'assets/shops/cantina_de_naples.jpg',
-  'Little Rangoon': 'assets/shops/little_rangoon.jpg',
-  'The Pacific Cafe': 'assets/shops/pacific_cafe.jpg',
-  'Aaharam': 'assets/shops/aaharam.jpg',
+final Map<String, Map<String, String>> shopImages = {
+  'Calcutta in a Box': {
+    'image': 'assets/shops/calcutta_in_a_box.jpg',
+    'fallback': 'assets/LOGO.png',
+  },
+  'Cantina de Naples': {
+    'image': 'assets/shops/cantina_de_naples.jpg',
+    'fallback': 'assets/LOGO.png',
+  },
+  'Little Rangoon': {
+    'image': 'assets/shops/little_rangoon.jpg',
+    'fallback': 'assets/LOGO.png',
+  },
+  'The Pacific Cafe': {
+    'image': 'assets/shops/pacific_cafe.jpg',
+    'fallback': 'assets/LOGO.png',
+  },
+  'Aaharam': {
+    'image': 'assets/shops/aaharam.jpg',
+    'fallback': 'assets/LOGO.png',
+  },
+};
+
+final Map<String, String> itemFallbackImages = {
+  'idly': 'assets/LOGO.png',
+  'ghee_roast': 'assets/LOGO.png',
+  'plain_dosa': 'assets/LOGO.png',
+  'vadai': 'assets/LOGO.png',
+  'meals': 'assets/LOGO.png',
+  'veg_fried_rice': 'assets/LOGO.png',
+  'egg_fried_rice': 'assets/LOGO.png',
+  'gobi_manchurian': 'assets/LOGO.png',
+  'chilli_paneer': 'assets/LOGO.png',
+  'veg_noodles': 'assets/LOGO.png',
+  'pasta': 'assets/LOGO.png',
+  'pizza': 'assets/LOGO.png',
+  'burger': 'assets/LOGO.png',
+  'sandwich': 'assets/LOGO.png',
+  'coffee': 'assets/LOGO.png',
+  'tea': 'assets/LOGO.png',
+  'juice': 'assets/LOGO.png',
+  'smoothie': 'assets/LOGO.png',
 };
 
 final List<MenuItem> demoMenuItems = [
@@ -16,6 +52,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Steamed rice cakes served with sambar and coconut chutney',
     price: 40,
     imageUrl: 'assets/images/idly.jpg',
+    fallbackImageUrl: itemFallbackImages['idly']!,
     category: 'Aaharam',
     rating: 4.5,
   ),
@@ -25,6 +62,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Crispy dosa made with ghee, served with sambar and chutney',
     price: 90,
     imageUrl: 'assets/images/ghee_roast.jpg',
+    fallbackImageUrl: itemFallbackImages['ghee_roast']!,
     category: 'Aaharam',
     rating: 4.7,
   ),
@@ -34,6 +72,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Classic crispy dosa served with sambar and coconut chutney',
     price: 60,
     imageUrl: 'assets/images/plain_dosa.jpg',
+    fallbackImageUrl: itemFallbackImages['plain_dosa']!,
     category: 'Aaharam',
     rating: 4.6,
   ),
@@ -43,6 +82,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Crispy fried lentil fritters served with sambar and chutney',
     price: 50,
     imageUrl: 'assets/images/vadai.jpg',
+    fallbackImageUrl: itemFallbackImages['vadai']!,
     category: 'Aaharam',
     rating: 4.4,
   ),
@@ -52,6 +92,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Complete meal with rice, sambar, rasam, curd, 3 vegetables, papad, and pickle',
     price: 120,
     imageUrl: 'assets/images/meals.jpg',
+    fallbackImageUrl: itemFallbackImages['meals']!,
     category: 'Aaharam',
     rating: 4.8,
   ),
@@ -63,6 +104,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Stir-fried rice with mixed vegetables and Chinese spices',
     price: 140,
     imageUrl: 'assets/images/veg_fried_rice.jpg',
+    fallbackImageUrl: itemFallbackImages['veg_fried_rice']!,
     category: 'Little Rangoon',
     rating: 4.8,
   ),
@@ -72,6 +114,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Stir-fried rice with scrambled eggs and vegetables',
     price: 120,
     imageUrl: 'assets/images/egg_fried_rice.jpg',
+    fallbackImageUrl: itemFallbackImages['egg_fried_rice']!,
     category: 'Little Rangoon',
     rating: 4.7,
   ),
@@ -81,6 +124,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Crispy fried cauliflower in spicy Chinese sauce',
     price: 130,
     imageUrl: 'assets/images/gobi_manchurian.jpg',
+    fallbackImageUrl: itemFallbackImages['gobi_manchurian']!,
     category: 'Little Rangoon',
     rating: 4.6,
   ),
@@ -90,6 +134,7 @@ final List<MenuItem> demoMenuItems = [
     description: 'Crispy paneer cubes in spicy Chinese sauce',
     price: 150,
     imageUrl: 'assets/images/chilli_paneer.jpg',
+    fallbackImageUrl: itemFallbackImages['chilli_paneer']!,
     category: 'Little Rangoon',
     rating: 4.5,
   ),
@@ -98,11 +143,12 @@ final List<MenuItem> demoMenuItems = [
   MenuItem(
     id: 10,
     name: 'Veg Noodles',
-    description: 'Stir-fried noodles with mixed vegetables and soy sauce',
-    price: 180,
+    description: 'Stir-fried noodles with mixed vegetables',
+    price: 120,
     imageUrl: 'assets/images/veg_noodles.jpg',
+    fallbackImageUrl: itemFallbackImages['veg_noodles']!,
     category: 'The Pacific Cafe',
-    rating: 4.7,
+    rating: 4.5,
   ),
   MenuItem(
     id: 11,

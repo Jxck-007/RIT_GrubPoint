@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:responsive_framework/responsive_framework.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'firebase_options.dart';
 import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
@@ -15,17 +16,26 @@ import 'home_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    if (kIsWeb) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.web,
+      );
+    } else {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    runApp(const MyApp());
   } catch (e) {
     print('Firebase initialization error: $e');
+    runApp(const MaterialApp(
+      home: FirebaseErrorScreen(),
+    ));
   }
-  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,36 +50,23 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             title: 'RIT GrubPoint',
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.deepPurple,
-                brightness: themeProvider.isDarkMode ? Brightness.dark : Brightness.light,
-              ),
-              useMaterial3: true,
-            ),
-            darkTheme: ThemeData.dark(useMaterial3: true),
-            themeMode: themeProvider.themeMode,
+            theme: themeProvider.getTheme(),
             builder: (context, child) => ResponsiveBreakpoints.builder(
               child: child!,
               breakpoints: [
-                const Breakpoint(start: 0, end: 450, name: 'MOBILE'),
-                const Breakpoint(start: 451, end: 800, name: 'TABLET'),
-                const Breakpoint(start: 801, end: 1920, name: 'DESKTOP'),
+                const Breakpoint(start: 0, end: 450, name: MOBILE),
+                const Breakpoint(start: 451, end: 800, name: TABLET),
+                const Breakpoint(start: 801, end: 1920, name: DESKTOP),
                 const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
               ],
             ),
-            home: StreamBuilder(
+            home: StreamBuilder<User?>(
               stream: FirebaseAuth.instance.authStateChanges(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
-                if (snapshot.hasData) {
-                  return const MainNavigation();
-                }
-                
-                return const LoginPage();
+                return snapshot.hasData ? const MainNavigation() : const LoginPage();
               },
             ),
           );
@@ -126,20 +123,9 @@ class FirebaseErrorScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const HomePage()),
-                    );
+                    runApp(const MyApp());
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                  ),
-                  child: const Text('Continue Anyway'),
+                  child: const Text('Retry Connection'),
                 ),
               ],
             ),

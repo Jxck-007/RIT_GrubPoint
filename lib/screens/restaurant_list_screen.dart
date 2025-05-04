@@ -84,7 +84,10 @@ class RestaurantListScreen extends StatelessWidget {
               itemCount: restaurants.length,
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
-                final imageUrl = shopImages[restaurant] ?? '';
+                final shopImage = shopImages[restaurant];
+                final imagePath = shopImage?['image'] as String? ?? '';
+                final fallbackPath = shopImage?['fallback'] as String? ?? 'assets/LOGO.png';
+
                 return GestureDetector(
                   onTap: () {
                     context.read<MenuProvider>().setSelectedRestaurant(restaurant);
@@ -104,18 +107,19 @@ class RestaurantListScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          child: imageUrl.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                                  child: Image.asset(
-                                    imageUrl,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : Container(
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.restaurant, size: 48, color: Colors.white),
-                                ),
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                            child: Image.asset(
+                              imagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  fallbackPath,
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                            ),
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(12.0),
@@ -163,7 +167,10 @@ class ShopSelectionScreen extends StatelessWidget {
         itemCount: shopNames.length,
         itemBuilder: (context, index) {
           final shop = shopNames[index];
-          final imageUrl = shopImages[shop]!;
+          final shopImage = shopImages[shop]!;
+          final imagePath = shopImage['image'] as String;
+          final fallbackPath = shopImage['fallback'] as String;
+
           return GestureDetector(
             onTap: () {
               Navigator.push(
@@ -177,7 +184,16 @@ class ShopSelectionScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Expanded(
-                    child: Image.asset(imageUrl, fit: BoxFit.cover),
+                    child: Image.asset(
+                      imagePath,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Image.asset(
+                          fallbackPath,
+                          fit: BoxFit.cover,
+                        );
+                      },
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(8.0),

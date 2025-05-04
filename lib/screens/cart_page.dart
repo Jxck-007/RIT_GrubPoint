@@ -19,18 +19,40 @@ class CartPage extends StatelessWidget {
                   padding: const EdgeInsets.all(16),
                   itemCount: cart.items.length,
                   itemBuilder: (context, index) {
-                    final item = cart.items[index];
+                    final cartItem = cart.items[index];
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: AssetImage(item.imageUrl),
+                          backgroundImage: AssetImage(cartItem.item.imageUrl),
                         ),
-                        title: Text(item.name),
-                        subtitle: Text('₹${item.price.toStringAsFixed(2)}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.remove_circle_outline),
-                          onPressed: () => cart.removeFromCart(item),
+                        title: Text(cartItem.item.name),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('₹${cartItem.item.price.toStringAsFixed(2)}'),
+                            Text('Quantity: ${cartItem.quantity}'),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove),
+                              onPressed: () => cart.updateQuantity(
+                                cartItem.item,
+                                cartItem.quantity - 1,
+                              ),
+                            ),
+                            Text('${cartItem.quantity}'),
+                            IconButton(
+                              icon: const Icon(Icons.add),
+                              onPressed: () => cart.updateQuantity(
+                                cartItem.item,
+                                cartItem.quantity + 1,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
@@ -43,24 +65,63 @@ class CartPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        'Total: ₹${cart.totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Items:',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          Text(
+                            '${cart.itemCount}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Total Amount:',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '₹${cart.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          // TODO: Implement checkout
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Checkout functionality coming soon!'),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // TODO: Implement checkout
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Checkout functionality coming soon!'),
+                              ),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: Text(
+                              'Proceed to Checkout',
+                              style: TextStyle(fontSize: 16),
                             ),
-                          );
-                        },
-                        child: const Text('Checkout'),
+                          ),
+                        ),
                       ),
                     ],
                   ),

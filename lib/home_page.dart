@@ -9,6 +9,8 @@ import 'providers/menu_provider.dart';
 import 'screens/category_items_screen.dart';
 import 'providers/theme_provider.dart';
 import 'data/menu_data.dart';
+import 'package:flutter/foundation.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -17,18 +19,45 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
   String _searchQuery = '';
   String _selectedCategory = 'All';
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
-  // Food categories
-  final List<String> _categories = [
-    'All',
-    'Lunch',
-    'Breakfast',
-    'Chaat',
-    'Drinks',
-    'Snacks'
+  // Food categories with icons and colors
+  final List<Map<String, dynamic>> _categories = [
+    {'name': 'All', 'icon': Icons.all_inclusive, 'color': Colors.blue},
+    {'name': 'Lunch', 'icon': Icons.lunch_dining, 'color': Colors.orange},
+    {'name': 'Breakfast', 'icon': Icons.breakfast_dining, 'color': Colors.purple},
+    {'name': 'Chaat', 'icon': Icons.food_bank, 'color': Colors.red},
+    {'name': 'Drinks', 'icon': Icons.local_drink, 'color': Colors.green},
+    {'name': 'Snacks', 'icon': Icons.fastfood, 'color': Colors.amber},
+  ];
+
+  // Featured items for carousel
+  final List<Map<String, dynamic>> _featuredItems = [
+    {
+      'name': 'Special Thali',
+      'description': 'Complete meal with 3 curries, rice, roti, dal, and dessert',
+      'price': 150,
+      'image': 'assets/images/special_thali.jpg',
+      'fallbackImage': 'assets/LOGO.png',
+    },
+    {
+      'name': 'Chicken Biryani',
+      'description': 'Fragrant basmati rice with tender chicken pieces',
+      'price': 180,
+      'image': 'assets/images/biryani.jpg',
+      'fallbackImage': 'assets/LOGO.png',
+    },
+    {
+      'name': 'Mango Lassi',
+      'description': 'Sweet yogurt drink with fresh mango pulp',
+      'price': 60,
+      'image': 'assets/images/mango_lassi.jpg',
+      'fallbackImage': 'assets/LOGO.png',
+    },
   ];
 
   // Canteen data for drawer
@@ -36,6 +65,7 @@ class _HomePageState extends State<HomePage> {
     {
       'name': 'Main Canteen',
       'image': 'assets/shops/aaharam.jpg',
+      'fallbackImage': 'assets/LOGO.png',
       'menu': [
         {'name': 'Pasta', 'price': 120, 'category': 'Lunch'},
         {'name': 'Sandwich', 'price': 80, 'category': 'Snacks'},
@@ -45,6 +75,7 @@ class _HomePageState extends State<HomePage> {
     {
       'name': 'Hostel Mess',
       'image': 'assets/shops/calcutta_in_a_box.jpg',
+      'fallbackImage': 'assets/LOGO.png',
       'menu': [
         {'name': 'Rice Plate', 'price': 60, 'category': 'Lunch'},
         {'name': 'Chapati', 'price': 10, 'category': 'Snacks'},
@@ -54,6 +85,7 @@ class _HomePageState extends State<HomePage> {
     {
       'name': 'Juice Bar',
       'image': 'assets/shops/little_rangoon.jpg',
+      'fallbackImage': 'assets/LOGO.png',
       'menu': [
         {'name': 'Fresh Juice', 'price': 50, 'category': 'Drinks'},
         {'name': 'Fruit Salad', 'price': 70, 'category': 'Snacks'},
@@ -62,39 +94,30 @@ class _HomePageState extends State<HomePage> {
     },
   ];
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Lunch':
-        return Icons.lunch_dining;
-      case 'Breakfast':
-        return Icons.breakfast_dining;
-      case 'Chaat':
-        return Icons.food_bank;
-      case 'Drinks':
-        return Icons.local_drink;
-      case 'Snacks':
-        return Icons.fastfood;
-      default:
-        return Icons.category;
-    }
-  }
-
-  void _addToCart(MenuItem item) {
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-    cartProvider.addToCart(item);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('${item.name} added to cart')),
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
     );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeIn,
+      ),
+    );
+    _animationController.forward();
   }
 
-  void _toggleFavorite(MenuItem item) {
-    final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
-    favoritesProvider.toggleFavorite(item);
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final List<String> categories = ['All', ...getRestaurantNames()];
     final List<MenuItem> menuItems = _selectedCategory == 'All'
         ? demoMenuItems
         : getMenuItemsByRestaurant(_selectedCategory);
@@ -106,201 +129,200 @@ class _HomePageState extends State<HomePage> {
     }).toList();
 
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/LOGO.png',
-                    height: 80,
-                    cacheWidth: 160,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200.0,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Theme.of(context).primaryColor,
+                      Theme.of(context).primaryColor.withOpacity(0.7),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'RIT GrubPoint',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.category),
-              title: const Text('Categories'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Select Category'),
-                        leading: IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => Navigator.pop(context),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Welcome to RIT GrubPoint',
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      body: GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.0,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your one-stop food ordering app',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
                         ),
-                        itemCount: _categories.length - 1, // Exclude 'All'
-                        itemBuilder: (context, index) {
-                          final category = _categories[index + 1]; // Skip 'All'
-                          return InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedCategory = category;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: Colors.deepPurple.shade100, width: 2),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Colors.black12,
-                                          blurRadius: 4,
-                                          offset: Offset(2, 2),
-                                        ),
-                                      ],
-                                      color: Colors.white,
-                                    ),
-                                    child: Center(
-                                      child: Icon(
-                                        _getCategoryIcon(category),
-                                        size: 48,
-                                        color: Colors.deepPurple,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  category,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          );
-                        },
                       ),
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
-            ..._canteens.map((canteen) => ListTile(
-              leading: CircleAvatar(
-                backgroundImage: AssetImage(canteen['image']),
-                radius: 20,
+                ),
               ),
-              title: Text(canteen['name']),
-              onTap: () {
-                Navigator.pop(context);
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CategoryItemsScreen(
-                        category: canteen['name'],
-                        items: canteen['menu'].map<MenuItem>((item) => MenuItem(
-                          id: DateTime.now().millisecondsSinceEpoch,
-                          name: item['name'],
-                          description: 'Delicious ${item['name']} from ${canteen['name']}',
-                          price: item['price'].toDouble(),
-                          imageUrl: 'https://via.placeholder.com/150',
-                          category: item['category'],
-                          isAvailable: true,
-                          rating: 4.5,
-                        )).toList(),
+            ),
+          ),
+          // Category Chips
+          SliverToBoxAdapter(
+            child: Container(
+              height: 80,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _categories.length,
+                itemBuilder: (context, index) {
+                  final category = _categories[index];
+                  final isSelected = _selectedCategory == category['name'];
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            category['icon'],
+                            size: 18,
+                            color: isSelected ? Colors.white : category['color'],
+                          ),
+                          const SizedBox(width: 4),
+                          Text(category['name']),
+                        ],
+                      ),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedCategory = category['name'];
+                        });
+                      },
+                      backgroundColor: Colors.white,
+                      selectedColor: category['color'],
+                      checkmarkColor: Colors.white,
+                      labelStyle: TextStyle(
+                        color: isSelected ? Colors.white : Colors.black,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: isSelected ? category['color'] : Colors.grey.shade300,
+                        ),
                       ),
                     ),
                   );
-                });
-              },
-            )),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          // Search bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search food items...',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
+                },
               ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
-              },
             ),
           ),
-          // Category filter chips
-          Container(
-            height: 50,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(categories[index]),
-                    selected: _selectedCategory == categories[index],
-                    onSelected: (selected) {
-                      setState(() {
-                        _selectedCategory = categories[index];
-                      });
-                    },
-                    selectedColor: Theme.of(context).colorScheme.primaryContainer,
-                    checkmarkColor: Theme.of(context).colorScheme.primary,
-                  ),
-                );
-              },
-            ),
-          ),
-          // Menu items
-          Expanded(
-            child: filteredItems.isEmpty
-                ? const Center(
-                    child: Text('No items found'),
+
+          // Menu Items List
+          SliverPadding(
+            padding: const EdgeInsets.all(16),
+            sliver: filteredItems.isEmpty
+                ? SliverToBoxAdapter(
+                    child: Center(
+                      child: Text('No items found'),
+                    ),
                   )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filteredItems.length,
-                    itemBuilder: (context, index) {
-                      final item = filteredItems[index];
-                      return _buildMenuItem(item);
-                    },
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final item = filteredItems[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    item.imageUrl,
+                                    width: 70,
+                                    height: 70,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 70,
+                                      height: 70,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.fastfood, size: 32, color: Colors.grey),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        item.name.toUpperCase(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        item.description,
+                                        style: const TextStyle(fontSize: 13, color: Colors.black54),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '₹${item.price.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Consumer<FavoritesProvider>(
+                                      builder: (context, favoritesProvider, _) {
+                                        final isFavorite = favoritesProvider.isFavorite(item);
+                                        return IconButton(
+                                          icon: Icon(
+                                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                                            color: isFavorite ? Colors.red : Colors.grey,
+                                          ),
+                                          iconSize: 22,
+                                          onPressed: () => favoritesProvider.toggleFavorite(item),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add_shopping_cart),
+                                      color: Theme.of(context).colorScheme.primary,
+                                      iconSize: 22,
+                                      onPressed: () => _addToCart(item),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: filteredItems.length,
+                    ),
                   ),
           ),
         ],
@@ -308,128 +330,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildMenuItem(MenuItem item) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Food image
-          SizedBox(
-            height: 180,
-            width: double.infinity,
-            child: Stack(
-              children: [
-                Image.asset(
-                  item.imageUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.restaurant, size: 50),
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Consumer<FavoritesProvider>(
-                    builder: (context, favoritesProvider, child) {
-                      final isFavorite = favoritesProvider.isFavorite(item);
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color: isFavorite ? Colors.red : Colors.grey,
-                          ),
-                          onPressed: () => favoritesProvider.toggleFavorite(item),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Name and rating
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.name,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Icon(Icons.star, color: Colors.amber, size: 16),
-                        const SizedBox(width: 4),
-                        Text('${item.rating}'),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // Description
-                Text(
-                  item.description,
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                // Price and add to cart button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '₹${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                    Consumer<CartProvider>(
-                      builder: (context, cart, child) {
-                        return ElevatedButton.icon(
-                          icon: const Icon(Icons.add_shopping_cart),
-                          label: const Text('Add to Cart'),
-                          onPressed: () {
-                            cart.addToCart(item);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('${item.name} added to cart'),
-                                duration: const Duration(seconds: 1),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
+  void _addToCart(MenuItem item) {
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+    cartProvider.addToCart(item);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.name} added to cart'),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
+  }
+
+  ImageProvider _getImageProvider(String imagePath, String fallbackPath) {
+    try {
+      return AssetImage(imagePath);
+    } catch (e) {
+      return AssetImage(fallbackPath);
+    }
+  }
+
+  ImageProvider _getShopImageProvider(String imagePath, String fallbackPath) {
+    try {
+      return AssetImage(imagePath);
+    } catch (e) {
+      return AssetImage(fallbackPath);
+    }
   }
 } 

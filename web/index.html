@@ -18,21 +18,42 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="A food ordering app for RIT students">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="myapp">
+  <meta name="apple-mobile-web-app-title" content="RIT GrubPoint">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>RIT_GrubPoint</title>
+  <title>RIT GrubPoint</title>
   <link rel="manifest" href="manifest.json">
-  <meta name="google-signin-client_id" content="572069152415-k4973n29403v8jm7j4ee289n8euru523.apps.googleusercontent.com">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js"></script>
+
+  <script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3PqvnKx1XQzyl5qLDyaHKXNjqZgLkTYw",
+      authDomain: "rit-grubpoint.firebaseapp.com",
+      projectId: "rit-grubpoint",
+      storageBucket: "rit-grubpoint.firebasestorage.app",
+      messagingSenderId: "572069152415",
+      appId: "1:572069152415:web:59cf6f9f4e128d708544aa",
+      measurementId: "G-L16M4DEZ03"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

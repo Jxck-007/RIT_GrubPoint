@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/theme_provider.dart';
 import 'main_navigation.dart';
 import 'forgot_password_page.dart';
@@ -20,6 +21,42 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  bool _rememberMe = false;
+  final _prefs = SharedPreferences.getInstance();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedCredentials();
+  }
+
+  Future<void> _loadRememberedCredentials() async {
+    final prefs = await _prefs;
+    final rememberedEmail = prefs.getString('remembered_email');
+    final rememberedPassword = prefs.getString('remembered_password');
+    final isRemembered = prefs.getBool('remember_me') ?? false;
+
+    if (rememberedEmail != null && rememberedPassword != null && isRemembered) {
+      setState(() {
+        _emailController.text = rememberedEmail;
+        _passwordController.text = rememberedPassword;
+        _rememberMe = isRemembered;
+      });
+    }
+  }
+
+  Future<void> _saveRememberedCredentials() async {
+    final prefs = await _prefs;
+    if (_rememberMe) {
+      await prefs.setString('remembered_email', _emailController.text);
+      await prefs.setString('remembered_password', _passwordController.text);
+      await prefs.setBool('remember_me', true);
+    } else {
+      await prefs.remove('remembered_email');
+      await prefs.remove('remembered_password');
+      await prefs.remove('remember_me');
+    }
+  }
 
   @override
   void dispose() {
@@ -36,6 +73,7 @@ class _LoginPageState extends State<LoginPage> {
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
+        await _saveRememberedCredentials();
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -60,11 +98,14 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/RITcanteenimage.png'),
+            image: const AssetImage('assets/RITcanteenimage.png'),
             fit: BoxFit.cover,
             opacity: 0.8,
+            onError: (exception, stackTrace) {
+              debugPrint('Error loading background image: $exception');
+            },
           ),
         ),
         child: Center(
@@ -193,8 +234,12 @@ class _LoginPageState extends State<LoginPage> {
                         Row(
                           children: [
                             Checkbox(
-                              value: false,
-                              onChanged: (_) {},
+                              value: _rememberMe,
+                              onChanged: (value) {
+                                setState(() {
+                                  _rememberMe = value ?? false;
+                                });
+                              },
                               activeColor: Colors.white,
                               checkColor: Colors.deepPurple,
                               side: const BorderSide(color: Colors.white54, width: 1.2),

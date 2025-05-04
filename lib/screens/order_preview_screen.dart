@@ -24,12 +24,11 @@ class OrderPreviewScreen extends StatelessWidget {
                   child: ListView.builder(
                     itemCount: cartProvider.items.length,
                     itemBuilder: (context, index) {
-                      final item = cartProvider.items[index];
-                      final quantity = cartProvider.getQuantity(item);
+                      final cartItem = cartProvider.items[index];
                       return ListTile(
-                        title: Text(item.name),
-                        subtitle: Text('Quantity: $quantity'),
-                        trailing: Text('₹${(item.price * quantity).toStringAsFixed(2)}'),
+                        title: Text(cartItem.item.name),
+                        subtitle: Text('Quantity: ${cartItem.quantity}'),
+                        trailing: Text('₹${cartItem.totalPrice.toStringAsFixed(2)}'),
                       );
                     },
                   ),
