@@ -266,7 +266,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${item.name} added to cart'),
-                                duration: const Duration(seconds: 1),
+                                duration: const Duration(milliseconds: 500),
                               ),
                             );
                           },

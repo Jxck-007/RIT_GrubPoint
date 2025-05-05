@@ -38,7 +38,10 @@ class _HomePageState extends State<HomePage> {
             onAddToCart: () {
               cartProvider.addToCart(item);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${item.name} added to cart')),
+                SnackBar(
+                  content: Text('${item.name} added to cart'),
+                  duration: const Duration(milliseconds: 500),
+                ),
               );
             },
             onToggleFavorite: () => favoritesProvider.toggleFavorite(item),
