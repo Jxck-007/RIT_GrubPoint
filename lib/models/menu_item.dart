@@ -8,6 +8,10 @@ class MenuItem {
   final String category;
   final double rating;
   final bool isAvailable;
+  final double? calories;
+  final double? protein;
+  final double? fat;
+  final double? carbs;
 
   MenuItem({
     required this.id,
@@ -19,6 +23,10 @@ class MenuItem {
     required this.rating,
     this.isAvailable = true,
     this.fallbackImageUrl = 'assets/LOGO.png',
+    this.calories,
+    this.protein,
+    this.fat,
+    this.carbs,
   });
 
   Map<String, dynamic> toJson() => {
@@ -31,6 +39,10 @@ class MenuItem {
     'category': category,
     'rating': rating,
     'isAvailable': isAvailable,
+    'calories': calories,
+    'protein': protein,
+    'fat': fat,
+    'carbs': carbs,
   };
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -44,6 +56,10 @@ class MenuItem {
       category: json['category'] as String,
       rating: json['rating'] as double,
       isAvailable: json['isAvailable'] as bool? ?? true,
+      calories: (json['calories'] as num?)?.toDouble(),
+      protein: (json['protein'] as num?)?.toDouble(),
+      fat: (json['fat'] as num?)?.toDouble(),
+      carbs: (json['carbs'] as num?)?.toDouble(),
     );
   }
 
@@ -67,6 +83,10 @@ class MenuItem {
     String? category,
     bool? isAvailable,
     double? rating,
+    double? calories,
+    double? protein,
+    double? fat,
+    double? carbs,
   }) {
     return MenuItem(
       id: id ?? this.id,
@@ -78,6 +98,10 @@ class MenuItem {
       category: category ?? this.category,
       isAvailable: isAvailable ?? this.isAvailable,
       rating: rating ?? this.rating,
+      calories: calories ?? this.calories,
+      protein: protein ?? this.protein,
+      fat: fat ?? this.fat,
+      carbs: carbs ?? this.carbs,
     );
   }
 } 

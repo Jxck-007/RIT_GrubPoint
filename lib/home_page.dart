@@ -246,94 +246,13 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final item = filteredItems[index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Image.network(
-                                    item.imageUrl,
-                                    width: 70,
-                                    height: 70,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) => Container(
-                                      width: 70,
-                                      height: 70,
-                                      color: Colors.grey[200],
-                                      child: const Icon(Icons.fastfood, size: 32, color: Colors.grey),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        item.name.toUpperCase(),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        item.description,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        '₹${item.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: Theme.of(context).colorScheme.onSurface,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Consumer<FavoritesProvider>(
-                                      builder: (context, favoritesProvider, _) {
-                                        final isFavorite = favoritesProvider.isFavorite(item);
-                                        return IconButton(
-                                          icon: Icon(
-                                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                                            color: isFavorite ? Colors.red : Colors.grey,
-                                          ),
-                                          iconSize: 22,
-                                          onPressed: () => favoritesProvider.toggleFavorite(item),
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.add_shopping_cart),
-                                      color: Theme.of(context).colorScheme.primary,
-                                      iconSize: 22,
-                                      onPressed: () => _addToCart(item),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: ItemPreview(
+                            item: item,
+                            onAddToCart: () => _addToCart(item),
+                            onToggleFavorite: () => Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(item),
+                            isFavorite: Provider.of<FavoritesProvider>(context).isFavorite(item),
                           ),
                         );
                       },

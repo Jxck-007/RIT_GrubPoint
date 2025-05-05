@@ -10,17 +10,17 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, String>> _messages = [];
+  List<Map<String, String>> get _messages => ChatService.messages;
 
   void _sendMessage() {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
-      _messages.add({'role': 'user', 'text': text});
+      ChatService.addMessage({'role': 'user', 'text': text});
     });
     final response = ChatService.getResponse(text);
     setState(() {
-      _messages.add({'role': 'bot', 'text': response});
+      ChatService.addMessage({'role': 'bot', 'text': response});
     });
     _controller.clear();
   }
@@ -47,7 +47,13 @@ class _ChatPageState extends State<ChatPage> {
                         color: isUser ? Colors.deepPurple[100] : Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(msg['text'] ?? '', style: TextStyle(fontSize: 16)),
+                      child: Text(
+                        msg['text'] ?? '',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
                     ),
                   );
                 },

@@ -161,7 +161,7 @@ class ItemPreviewPage extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(32),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -173,42 +173,81 @@ class ItemPreviewPage extends StatelessWidget {
                     Text(
                       item.name.toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 24,
+                        fontSize: 28,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     Text(
                       '₹${item.price.toStringAsFixed(2)}',
                       style: const TextStyle(
-                        fontSize: 18,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.deepPurple,
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 24),
                     const Text(
                       'Description',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 15,
+                        fontSize: 18,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
                       item.description,
-                      style: const TextStyle(fontSize: 14),
+                      style: const TextStyle(fontSize: 16),
                     ),
+                    // Nutrition info
+                    if (item.calories != null || item.protein != null || item.fat != null || item.carbs != null) ...[
+                      const SizedBox(height: 24),
+                      const Text(
+                        'Nutritional Values (per serving)',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (item.calories != null) ...[
+                            Text('Calories: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                            Text('${item.calories!.toStringAsFixed(0)} kcal'),
+                            SizedBox(width: 16),
+                          ],
+                          if (item.protein != null) ...[
+                            Text('Protein: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                            Text('${item.protein!.toStringAsFixed(1)}g'),
+                            SizedBox(width: 16),
+                          ],
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          if (item.fat != null) ...[
+                            Text('Fat: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                            Text('${item.fat!.toStringAsFixed(1)}g'),
+                            SizedBox(width: 16),
+                          ],
+                          if (item.carbs != null) ...[
+                            Text('Carbs: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                            Text('${item.carbs!.toStringAsFixed(1)}g'),
+                          ],
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
               const SizedBox(width: 32),
-              // Image (right, small)
+              // Large Image (right)
               ClipRRect(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(18),
                 child: SizedBox(
-                  width: 120,
-                  height: 120,
+                  width: screenWidth * 0.35,
+                  height: screenWidth * 0.35,
                   child: item.imageUrl.startsWith('assets/')
                       ? (kIsWeb
                           ? Image.network(
@@ -217,7 +256,7 @@ class ItemPreviewPage extends StatelessWidget {
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey[200],
-                                  child: const Icon(Icons.restaurant, size: 48),
+                                  child: const Icon(Icons.restaurant, size: 64),
                                 );
                               },
                             )
@@ -227,7 +266,7 @@ class ItemPreviewPage extends StatelessWidget {
                               errorBuilder: (context, error, stackTrace) {
                                 return Container(
                                   color: Colors.grey[200],
-                                  child: const Icon(Icons.restaurant, size: 48),
+                                  child: const Icon(Icons.restaurant, size: 64),
                                 );
                               },
                             ))
@@ -237,7 +276,7 @@ class ItemPreviewPage extends StatelessWidget {
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
                               color: Colors.grey[200],
-                              child: const Icon(Icons.restaurant, size: 48),
+                              child: const Icon(Icons.restaurant, size: 64),
                             );
                           },
                         ),

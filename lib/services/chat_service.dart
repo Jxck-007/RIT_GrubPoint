@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatService {
   static String? _userName;
+  static List<Map<String, String>> messages = [];
 
   // Singleton pattern
   static final ChatService _instance = ChatService._internal();
@@ -67,5 +68,9 @@ class ChatService {
     }
 
     return 'I\'m not sure about that. I can help you with:\n\n• Menu items and prices\n• Special dishes and recommendations\n• Dietary preferences\n• Order status\n\nWhat would you like to know?';
+  }
+
+  static void addMessage(Map<String, String> message) {
+    messages.add(message);
   }
 } 

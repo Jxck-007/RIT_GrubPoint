@@ -55,6 +55,10 @@ final List<MenuItem> demoMenuItems = [
     fallbackImageUrl: itemFallbackImages['idly']!,
     category: 'Aaharam',
     rating: 4.5,
+    calories: 120,
+    protein: 2,
+    fat: 0.5,
+    carbs: 25,
   ),
   MenuItem(
     id: 2,
@@ -65,6 +69,10 @@ final List<MenuItem> demoMenuItems = [
     fallbackImageUrl: itemFallbackImages['ghee_roast']!,
     category: 'Aaharam',
     rating: 4.7,
+    calories: 250,
+    protein: 4,
+    fat: 8,
+    carbs: 40,
   ),
   MenuItem(
     id: 3,
@@ -75,6 +83,10 @@ final List<MenuItem> demoMenuItems = [
     fallbackImageUrl: itemFallbackImages['plain_dosa']!,
     category: 'Aaharam',
     rating: 4.6,
+    calories: 180,
+    protein: 3,
+    fat: 3,
+    carbs: 35,
   ),
   MenuItem(
     id: 4,
@@ -107,6 +119,10 @@ final List<MenuItem> demoMenuItems = [
     fallbackImageUrl: itemFallbackImages['veg_fried_rice']!,
     category: 'Little Rangoon',
     rating: 4.8,
+    calories: 220,
+    protein: 5,
+    fat: 4,
+    carbs: 40,
   ),
   MenuItem(
     id: 7,
