@@ -23,6 +23,10 @@ class CategoryItemsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(category),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

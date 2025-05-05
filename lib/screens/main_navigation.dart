@@ -10,6 +10,9 @@ import '../profile_page.dart';
 import '../services/firebase_service.dart';
 import '../favorites_page.dart';
 import 'settings_page.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({Key? key}) : super(key: key);
@@ -31,10 +34,10 @@ class _MainNavigationState extends State<MainNavigation> {
   ];
 
   final List<String> _titles = [
-    'Home',
-    'Cart',
-    'Jarvix Chat',
-    'Favorites',
+    'home'.tr(),
+    'cart'.tr(),
+    'jarvix'.tr(),
+    'favorites'.tr(),
   ];
 
   @override
@@ -173,6 +176,19 @@ class _MainNavigationState extends State<MainNavigation> {
                 themeProvider.toggleTheme();
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: Text('logout'.tr()),
+              onTap: () async {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
+                  );
+                }
+              },
+            ),
             if (!_isFirebaseAvailable)
               const ListTile(
                 leading: Icon(Icons.warning_amber_rounded, color: Colors.orange),
@@ -191,22 +207,22 @@ class _MainNavigationState extends State<MainNavigation> {
             _selectedIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: const Icon(Icons.home),
+            label: 'home'.tr(),
           ),
           NavigationDestination(
-            icon: Icon(Icons.shopping_cart),
-            label: 'Cart',
+            icon: const Icon(Icons.shopping_cart),
+            label: 'cart'.tr(),
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat),
-            label: 'Jarvix',
+            icon: const Icon(Icons.chat),
+            label: 'jarvix'.tr(),
           ),
           NavigationDestination(
-            icon: Icon(Icons.favorite),
-            label: 'Favorites',
+            icon: const Icon(Icons.favorite),
+            label: 'favorites'.tr(),
           ),
         ],
       ),
@@ -320,7 +336,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'RIT GrubPoint is the official food ordering app for students at Ramaiah Institute of Technology, Chennai.',
+                  'RIT GrubPoint is the official food ordering app for students at Rajalakshmi Institute of Technology, Chennai.',
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -329,7 +345,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '© 2023 RIT GrubPoint Team',
+                  '© 2025 RIT GrubPoint Team',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],

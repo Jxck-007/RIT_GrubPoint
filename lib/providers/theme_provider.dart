@@ -31,19 +31,21 @@ class ThemeProvider with ChangeNotifier {
     if (_isDarkMode) {
       return ThemeData.dark().copyWith(
         primaryColor: Colors.deepPurple,
-        colorScheme: ColorScheme.dark(
+        colorScheme: const ColorScheme.dark(
           primary: Colors.deepPurple,
           secondary: Colors.deepPurpleAccent,
-          surface: Colors.grey[900]!,
-          background: Colors.black,
+          surface: Color(0xFF23232A),
+          background: Color(0xFF181820),
+          onSurface: Colors.white,
+          onBackground: Colors.white,
         ),
-        scaffoldBackgroundColor: Colors.black,
-        appBarTheme: AppBarTheme(
-          backgroundColor: Colors.grey[900],
+        scaffoldBackgroundColor: const Color(0xFF181820),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF23232A),
           elevation: 0,
         ),
-        cardTheme: CardTheme(
-          color: Colors.grey[850],
+        cardTheme: const CardTheme(
+          color: Color(0xFF23232A),
           elevation: 2,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(

@@ -12,9 +12,11 @@ import 'providers/favorites_provider.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login_page.dart';
 import 'home_page.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
   try {
     if (kIsWeb) {
       await Firebase.initializeApp(
@@ -25,7 +27,14 @@ void main() async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     }
-    runApp(const MyApp());
+    runApp(
+      EasyLocalization(
+        supportedLocales: const [Locale('en')],
+        path: 'assets/langs',
+        fallbackLocale: const Locale('en'),
+        child: const MyApp(),
+      ),
+    );
   } catch (e) {
     print('Firebase initialization error: $e');
     runApp(const MaterialApp(
@@ -50,7 +59,11 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             title: 'RIT GrubPoint',
+            debugShowCheckedModeBanner: false,
             theme: themeProvider.getTheme(),
+            localizationsDelegates: context.localizationDelegates,
+            supportedLocales: context.supportedLocales,
+            locale: context.locale,
             builder: (context, child) => ResponsiveBreakpoints.builder(
               child: child!,
               breakpoints: [

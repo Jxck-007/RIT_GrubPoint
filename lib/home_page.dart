@@ -11,6 +11,7 @@ import 'providers/theme_provider.dart';
 import 'data/menu_data.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:easy_localization/easy_localization.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -129,6 +130,10 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
     }).toList();
 
     return Scaffold(
+      appBar: AppBar(
+        title: const SizedBox.shrink(),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      ),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -191,23 +196,29 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                           Icon(
                             category['icon'],
                             size: 18,
-                            color: isSelected ? Colors.white : category['color'],
+                            color: isSelected
+                                ? Colors.white
+                                : category['color'],
                           ),
                           const SizedBox(width: 4),
-                          Text(category['name']),
+                          Text(((category['name'] as String).toLowerCase()).tr()),
                         ],
                       ),
                       selected: isSelected,
                       onSelected: (selected) {
                         setState(() {
-                          _selectedCategory = category['name'];
+                          _selectedCategory = category['name'] as String;
                         });
                       },
                       backgroundColor: Colors.white,
                       selectedColor: category['color'],
                       checkmarkColor: Colors.white,
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
+                        color: isSelected
+                            ? Colors.white
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? Colors.black87
+                                : Theme.of(context).colorScheme.onSurface),
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
@@ -228,7 +239,7 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
             sliver: filteredItems.isEmpty
                 ? SliverToBoxAdapter(
                     child: Center(
-                      child: Text('No items found'),
+                      child: const Text('No items found'),
                     ),
                   )
                 : SliverList(
@@ -268,24 +279,29 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
                                     children: [
                                       Text(
                                         item.name.toUpperCase(),
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 16,
+                                          color: Theme.of(context).colorScheme.onSurface,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         item.description,
-                                        style: const TextStyle(fontSize: 13, color: Colors.black54),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                        ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
                                         '₹${item.price.toStringAsFixed(2)}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 15,
+                                          color: Theme.of(context).colorScheme.onSurface,
                                         ),
                                       ),
                                     ],

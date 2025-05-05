@@ -142,37 +142,144 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final onBg = Theme.of(context).colorScheme.onBackground;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('My Profile'),
       ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 50,
-              child: Icon(Icons.person, size: 50),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Profile Page',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Avatar, Name, Email
+                    const SizedBox(height: 8),
+                    CircleAvatar(
+                      radius: 48,
+                      backgroundColor: Colors.deepPurple,
+                      child: Icon(Icons.person, size: 56, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      _nameController.text.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: onBg,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _emailController.text,
+                      style: TextStyle(fontSize: 15, color: onBg.withOpacity(0.7)),
+                    ),
+                    const SizedBox(height: 32),
+                    // Settings & Preferences Section
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Settings & Preferences',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: onBg,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.notifications, color: Colors.deepPurple),
+                            title: const Text('Notifications'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.calendar_today, color: Colors.green),
+                            title: const Text('My Reservations'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ReservationScreen()));
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // Account Information Section
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Account Information',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: onBg,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.person, color: Colors.blue),
+                            title: const Text('Change Name'),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              setState(() {
+                                _isEditing = true;
+                              });
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Change Name'),
+                                  content: TextField(
+                                    controller: _nameController,
+                                    decoration: const InputDecoration(labelText: 'Name'),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        _saveProfile();
+                                        Navigator.pop(context);
+                                      },
+                                      child: const Text('Save'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                          const Divider(height: 0),
+                          ListTile(
+                            leading: const Icon(Icons.phone, color: Colors.green),
+                            title: const Text('Contact Information'),
+                            subtitle: Text(_phoneController.text, style: TextStyle(color: onBg.withOpacity(0.8))),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            SizedBox(height: 8),
-            Text(
-              'Coming soon!',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 } 
