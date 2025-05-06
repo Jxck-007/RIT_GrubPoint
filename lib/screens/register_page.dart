@@ -198,7 +198,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             }
                             final deptEmailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@(cse|aiml|aids|ece|vlsi|mech)\\.ritchennai\\.edu\\.in$');
                             if (!deptEmailRegExp.hasMatch(value)) {
-                              return 'Email must be of the form example@dept.ritchennai.edu.in (dept: cse, aiml, aids, ece, vlsi, mech)';
+                              return 'It must be in form example@dept.ritchennai.edu.in';
                             }
                             return null;
                           },

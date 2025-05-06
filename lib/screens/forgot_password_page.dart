@@ -181,7 +181,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         return 'Please enter your college email';
                       }
                       if (!_validateEmail(value)) {
-                        return 'Please enter a valid RIT Chennai email (example@dept.ritchennai.edu.in)';
+                        return 'Please enter a valid email (example@dept.ritchennai.edu.in)';
                       }
                       return null;
                     },

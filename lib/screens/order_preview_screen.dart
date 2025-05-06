@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/menu_item.dart';
 import '../providers/cart_provider.dart';
+import 'payment_screen.dart';
 
 class OrderPreviewScreen extends StatelessWidget {
   const OrderPreviewScreen({Key? key}) : super(key: key);
@@ -44,6 +45,27 @@ class OrderPreviewScreen extends StatelessWidget {
                       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
                     ),
                   ],
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PaymentScreen(),
+                        ),
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'Proceed to Payment',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
