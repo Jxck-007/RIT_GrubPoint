@@ -196,9 +196,9 @@ class _RegisterPageState extends State<RegisterPage> {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your college email';
                             }
-                            final deptEmailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@(cse|aiml|aids|ece|vlsi|mech)\\.ritchennai\\.edu\\.in$');
-                            if (!deptEmailRegExp.hasMatch(value)) {
-                              return 'It must be in form example@dept.ritchennai.edu.in';
+                            final ritEmailRegExp = RegExp(r'^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)?ritchennai\.edu\.in$');
+                            if (!ritEmailRegExp.hasMatch(value)) {
+                              return 'Please enter a valid RIT Chennai email address';
                             }
                             return null;
                           },

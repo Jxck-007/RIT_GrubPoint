@@ -81,6 +81,7 @@ class _MainNavigationState extends State<MainNavigation> {
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        leading: _selectedIndex == 0 ? null : Container(),
         actions: [
           IconButton(
             icon: Icon(

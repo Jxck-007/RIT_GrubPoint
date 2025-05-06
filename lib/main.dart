@@ -17,7 +17,12 @@ import 'package:easy_localization/easy_localization.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  
+  try {
+    await dotenv.load(fileName: "assets/.env");
+  } catch (e) {
+    print('Warning: .env file not found. Using default values.');
+  }
   
   try {
     if (kIsWeb) {
