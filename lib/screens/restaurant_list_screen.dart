@@ -85,8 +85,8 @@ class RestaurantListScreen extends StatelessWidget {
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
                 final shopImage = shopImages[restaurant];
-                final imagePath = shopImage?['image'] as String? ?? '';
-                final fallbackPath = shopImage?['fallback'] as String? ?? 'assets/LOGO.png';
+                final imagePath = shopImage?['image'] ?? '';
+                final fallbackPath = shopImage?['fallback'] ?? 'assets/LOGO.png';
 
                 return GestureDetector(
                   onTap: () {

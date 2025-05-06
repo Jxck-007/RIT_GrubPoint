@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
-import '../models/menu_item.dart';
-import 'order_preview_screen.dart';
-import 'payment_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -13,8 +10,8 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> with SingleTickerProviderStateMixin {
-  double _swipeProgress = 0.0;
-  bool _isProcessing = false;
+  final double _swipeProgress = 0.0;
+  final bool _isProcessing = false;
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
 

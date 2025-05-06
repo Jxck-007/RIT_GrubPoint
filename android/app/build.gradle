@@ -21,13 +21,15 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
 
 android {
-    namespace "com.example.rit_grubpoint"
-    compileSdkVersion flutter.compileSdkVersion
+    namespace "com.rit.grubpoint"
+    compileSdk 34
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -44,9 +46,9 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.rit_grubpoint"
-        minSdkVersion flutter.minSdkVersion
-        targetSdkVersion flutter.targetSdkVersion
+        applicationId "com.rit.grubpoint"
+        minSdk 21
+        targetSdk 34
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -56,4 +58,12 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 } 

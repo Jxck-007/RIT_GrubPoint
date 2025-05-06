@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../providers/theme_provider.dart';
 import 'main_navigation.dart';
 import 'forgot_password_page.dart';
 import 'register_page.dart';
@@ -162,11 +160,11 @@ class _LoginPageState extends State<LoginPage> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: 'College Mail',
-                            labelStyle: TextStyle(color: Colors.white70),
+                            labelStyle: const TextStyle(color: Colors.white70),
                             prefixIcon: const Icon(Icons.email_outlined, color: Colors.white70),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(color: Colors.white24, width: 1.2),
+                              borderSide: const BorderSide(color: Colors.white24, width: 1.2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
@@ -193,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            labelStyle: TextStyle(color: Colors.white70),
+                            labelStyle: const TextStyle(color: Colors.white70),
                             prefixIcon: const Icon(Icons.lock_outline, color: Colors.white70),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -210,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide(color: Colors.white24, width: 1.2),
+                              borderSide: const BorderSide(color: Colors.white24, width: 1.2),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(18),

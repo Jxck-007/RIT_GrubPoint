@@ -35,9 +35,7 @@ class ThemeProvider with ChangeNotifier {
           primary: Colors.deepPurple,
           secondary: Colors.deepPurpleAccent,
           surface: Color(0xFF23232A),
-          background: Color(0xFF181820),
           onSurface: Colors.white,
-          onBackground: Colors.white,
         ),
         scaffoldBackgroundColor: const Color(0xFF181820),
         appBarTheme: const AppBarTheme(
@@ -70,11 +68,10 @@ class ThemeProvider with ChangeNotifier {
     } else {
       return ThemeData.light().copyWith(
         primaryColor: Colors.deepPurple,
-        colorScheme: ColorScheme.light(
+        colorScheme: const ColorScheme.light(
           primary: Colors.deepPurple,
           secondary: Colors.deepPurpleAccent,
           surface: Colors.white,
-          background: Colors.grey[50]!,
         ),
         scaffoldBackgroundColor: Colors.grey[50],
         appBarTheme: const AppBarTheme(

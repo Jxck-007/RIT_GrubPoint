@@ -1,8 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatService {
   static String? _userName;
   static List<Map<String, String>> messages = [];
+  static String? _apiKey;
+  static bool _isApiKeyConfigured = false;
 
   // Singleton pattern
   static final ChatService _instance = ChatService._internal();
@@ -11,7 +14,35 @@ class ChatService {
     return _instance;
   }
 
-  ChatService._internal();
+  ChatService._internal() {
+    _initializeApiKey();
+  }
+
+  static Future<void> _initializeApiKey() async {
+    // First try to get from environment variables
+    _apiKey = dotenv.env['OPENAI_API_KEY'];
+    
+    // If not found in env, try to get from SharedPreferences
+    if (_apiKey == null) {
+      final prefs = await SharedPreferences.getInstance();
+      _apiKey = prefs.getString('openai_api_key');
+    }
+    
+    _isApiKeyConfigured = _apiKey != null && _apiKey!.isNotEmpty;
+  }
+
+  static Future<void> setApiKey(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('openai_api_key', key);
+    _apiKey = key;
+    _isApiKeyConfigured = true;
+  }
+
+  static bool get isApiKeyConfigured => _isApiKeyConfigured;
+
+  static String getApiKeyWarning() {
+    return 'Warning: AI chat feature is not configured. Please set up your API key in the app settings.';
+  }
   
   // Update user name (call this when user name changes)
   static Future<void> updateUserName() async {
@@ -21,6 +52,10 @@ class ChatService {
 
   // Get a response for the chat
   static String getResponse(String message) {
+    if (!_isApiKeyConfigured) {
+      return getApiKeyWarning();
+    }
+    
     message = message.toLowerCase();
     
     if (message.contains('hi') || message.contains('hello') || message.contains('hey')) {

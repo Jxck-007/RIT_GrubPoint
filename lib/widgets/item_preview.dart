@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/menu_item.dart';
 import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import '../providers/cart_provider.dart';
+import '../providers/favorites_provider.dart';
 
 class ItemPreview extends StatelessWidget {
   final MenuItem item;
@@ -162,125 +165,186 @@ class ItemPreviewPage extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(32),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Details (left)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              // Large Image
+              Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: SizedBox(
+                    width: screenWidth * 0.8,
+                    height: screenWidth * 0.8,
+                    child: item.imageUrl.startsWith('assets/')
+                        ? (kIsWeb
+                            ? Image.network(
+                                item.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.restaurant, size: 64),
+                                  );
+                                },
+                              )
+                            : Image.asset(
+                                item.imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: Colors.grey[200],
+                                    child: const Icon(Icons.restaurant, size: 64),
+                                  );
+                                },
+                              ))
+                        : Image.network(
+                            item.imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.restaurant, size: 64),
+                              );
+                            },
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Details
+              Text(
+                item.name.toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                '₹${item.price.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Description (if available)
+              if (item.description.isNotEmpty) ...[
+                const Text(
+                  'Description',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.description,
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+              // Nutrition info (if available)
+              if (item.calories != null || item.protein != null || item.fat != null || item.carbs != null) ...[
+                const SizedBox(height: 24),
+                const Text(
+                  'Nutritional Values (per serving)',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    Text(
-                      item.name.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      '₹${item.price.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.deepPurple,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'Description',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.description,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    // Nutrition info
-                    if (item.calories != null || item.protein != null || item.fat != null || item.carbs != null) ...[
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Nutritional Values (per serving)',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          if (item.calories != null) ...[
-                            Text('Calories: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                            Text('${item.calories!.toStringAsFixed(0)} kcal'),
-                            SizedBox(width: 16),
-                          ],
-                          if (item.protein != null) ...[
-                            Text('Protein: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                            Text('${item.protein!.toStringAsFixed(1)}g'),
-                            SizedBox(width: 16),
-                          ],
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          if (item.fat != null) ...[
-                            Text('Fat: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                            Text('${item.fat!.toStringAsFixed(1)}g'),
-                            SizedBox(width: 16),
-                          ],
-                          if (item.carbs != null) ...[
-                            Text('Carbs: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                            Text('${item.carbs!.toStringAsFixed(1)}g'),
-                          ],
-                        ],
-                      ),
+                    if (item.calories != null) ...[
+                      const Text('Calories: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                      Text('${item.calories!.toStringAsFixed(0)} kcal'),
+                      const SizedBox(width: 16),
+                    ],
+                    if (item.protein != null) ...[
+                      const Text('Protein: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                      Text('${item.protein!.toStringAsFixed(1)}g'),
+                      const SizedBox(width: 16),
                     ],
                   ],
                 ),
-              ),
-              const SizedBox(width: 32),
-              // Large Image (right)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: SizedBox(
-                  width: screenWidth * 0.35,
-                  height: screenWidth * 0.35,
-                  child: item.imageUrl.startsWith('assets/')
-                      ? (kIsWeb
-                          ? Image.network(
-                              item.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.restaurant, size: 64),
-                                );
-                              },
-                            )
-                          : Image.asset(
-                              item.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.restaurant, size: 64),
-                                );
-                              },
-                            ))
-                      : Image.network(
-                          item.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[200],
-                              child: const Icon(Icons.restaurant, size: 64),
-                            );
-                          },
-                        ),
+                Row(
+                  children: [
+                    if (item.fat != null) ...[
+                      const Text('Fat: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                      Text('${item.fat!.toStringAsFixed(1)}g'),
+                      const SizedBox(width: 16),
+                    ],
+                    if (item.carbs != null) ...[
+                      const Text('Carbs: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                      Text('${item.carbs!.toStringAsFixed(1)}g'),
+                    ],
+                  ],
                 ),
+              ],
+              const SizedBox(height: 32),
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Provider.of<CartProvider>(context, listen: false).addToCart(item);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${item.name} added to cart'),
+                          duration: const Duration(milliseconds: 500),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.add_shopping_cart),
+                    label: const Text('Add to Cart'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Provider.of<FavoritesProvider>(context, listen: false).toggleFavorite(item);
+                    },
+                    icon: Icon(
+                      Provider.of<FavoritesProvider>(context).isFavorite(item)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                    ),
+                    label: Text(
+                      Provider.of<FavoritesProvider>(context).isFavorite(item)
+                          ? 'Remove from Favorites'
+                          : 'Add to Favorites',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red[100],
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // TODO: Implement reservation functionality
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Reservation feature coming soon!'),
+                          duration: Duration(milliseconds: 500),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Reserve'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green[100],
+                      foregroundColor: Colors.green[700],
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

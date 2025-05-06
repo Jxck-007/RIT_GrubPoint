@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart';
 import 'screens/notifications_screen.dart';
-import 'screens/reviews_screen.dart';
 import 'screens/reservation_screen.dart';
 import 'services/firebase_service.dart';
 
@@ -142,7 +141,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final onBg = Theme.of(context).colorScheme.onBackground;
+    final onBg = Theme.of(context).colorScheme.onSurface;
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Profile'),
@@ -157,7 +156,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     // Avatar, Name, Email
                     const SizedBox(height: 8),
-                    CircleAvatar(
+                    const CircleAvatar(
                       radius: 48,
                       backgroundColor: Colors.deepPurple,
                       child: Icon(Icons.person, size: 56, color: Colors.white),

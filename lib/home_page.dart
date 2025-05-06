@@ -5,12 +5,7 @@ import 'models/menu_item.dart';
 import 'providers/cart_provider.dart';
 import 'widgets/item_preview.dart';
 import 'providers/favorites_provider.dart';
-import 'providers/menu_provider.dart';
-import 'screens/category_items_screen.dart';
-import 'providers/theme_provider.dart';
 import 'data/menu_data.dart';
-import 'package:flutter/foundation.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:easy_localization/easy_localization.dart';
 
 class HomePage extends StatefulWidget {
@@ -21,7 +16,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin {
-  String _searchQuery = '';
+  final String _searchQuery = '';
   String _selectedCategory = 'All';
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -246,9 +241,9 @@ class _HomePageState extends State<HomePage> with SingleTickerProviderStateMixin
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: filteredItems.isEmpty
-                ? SliverToBoxAdapter(
+                ? const SliverToBoxAdapter(
                     child: Center(
-                      child: const Text('No items found'),
+                      child: Text('No items found'),
                     ),
                   )
                 : SliverList(
