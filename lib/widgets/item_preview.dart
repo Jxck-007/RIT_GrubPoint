@@ -289,18 +289,30 @@ class ItemPreviewPage extends StatelessWidget {
                               const SizedBox(width: 16),
                               ElevatedButton.icon(
                                 onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Reservation feature coming soon!'),
-                                      duration: Duration(milliseconds: 500),
-                                    ),
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return ReservationDialog(
+                                        restaurantName: item.name,
+                                        onReserve: (date, time, guests, specialRequests) {
+                                          // Handle reservation
+                                          Navigator.pop(context);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(
+                                              content: Text('Reservation confirmed for ${item.name}!'),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
                                   );
                                 },
                                 icon: const Icon(Icons.calendar_today),
                                 label: const Text('Reserve'),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[100],
-                                  foregroundColor: Colors.green[700],
+                                  backgroundColor: Colors.deepPurple,
+                                  foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                                 ),
                               ),
@@ -513,18 +525,30 @@ class ItemPreviewPage extends StatelessWidget {
                         const SizedBox(width: 16),
                         ElevatedButton.icon(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Reservation feature coming soon!'),
-                                duration: Duration(milliseconds: 500),
-                              ),
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return ReservationDialog(
+                                  restaurantName: item.name,
+                                  onReserve: (date, time, guests, specialRequests) {
+                                    // Handle reservation
+                                    Navigator.pop(context);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Reservation confirmed for ${item.name}!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
                             );
                           },
                           icon: const Icon(Icons.calendar_today),
                           label: const Text('Reserve'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[100],
-                            foregroundColor: Colors.green[700],
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                           ),
                         ),
@@ -535,5 +559,270 @@ class ItemPreviewPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class ReservationDialog extends StatefulWidget {
+  final String restaurantName;
+  final Function(DateTime, TimeOfDay, int, String) onReserve;
+
+  const ReservationDialog({
+    Key? key,
+    required this.restaurantName,
+    required this.onReserve,
+  }) : super(key: key);
+
+  @override
+  State<ReservationDialog> createState() => _ReservationDialogState();
+}
+
+class _ReservationDialogState extends State<ReservationDialog> {
+  DateTime _selectedDate = DateTime.now();
+  TimeOfDay _selectedTime = TimeOfDay.now();
+  int _guestCount = 2;
+  final _specialRequestsController = TextEditingController();
+  final List<TimeOfDay> _availableTimeSlots = [
+    const TimeOfDay(hour: 11, minute: 30),
+    const TimeOfDay(hour: 12, minute: 0),
+    const TimeOfDay(hour: 12, minute: 30),
+    const TimeOfDay(hour: 13, minute: 0),
+    const TimeOfDay(hour: 13, minute: 30),
+    const TimeOfDay(hour: 17, minute: 0),
+    const TimeOfDay(hour: 17, minute: 30),
+    const TimeOfDay(hour: 18, minute: 0),
+    const TimeOfDay(hour: 18, minute: 30),
+    const TimeOfDay(hour: 19, minute: 0),
+    const TimeOfDay(hour: 19, minute: 30),
+    const TimeOfDay(hour: 20, minute: 0),
+  ];
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _selectedDate) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.restaurant, size: 28, color: Colors.deepPurple),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Reserve at ${widget.restaurantName}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // Date Selection
+            InkWell(
+              onTap: () => _selectDate(context),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.deepPurple),
+                    const SizedBox(width: 12),
+                    Text(
+                      _formatDate(_selectedDate),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Time Selection
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Select Time',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _availableTimeSlots.map((time) {
+                      final isSelected = time == _selectedTime;
+                      return InkWell(
+                        onTap: () => setState(() => _selectedTime = time),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.deepPurple : Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            time.format(context),
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Guest Count
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Number of Guests',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: _guestCount > 1
+                            ? () => setState(() => _guestCount--)
+                            : null,
+                      ),
+                      Text(
+                        '$_guestCount',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: _guestCount < 10
+                            ? () => setState(() => _guestCount++)
+                            : null,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Special Requests
+            TextField(
+              controller: _specialRequestsController,
+              decoration: InputDecoration(
+                hintText: 'Special Requests (Optional)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+              ),
+              maxLines: 2,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                widget.onReserve(
+                  _selectedDate,
+                  _selectedTime,
+                  _guestCount,
+                  _specialRequestsController.text,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Confirm Reservation',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _specialRequestsController.dispose();
+    super.dispose();
   }
 } 

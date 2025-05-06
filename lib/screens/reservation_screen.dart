@@ -199,19 +199,6 @@ class _ReservationScreenState extends State<ReservationScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          Icon(Icons.star, color: Colors.amber, size: 16),
-                          Icon(Icons.star_half, color: Colors.amber, size: 16),
-                          SizedBox(width: 4),
-                          Text('4.5 (120 reviews)'),
-                        ],
-                      ),
                       const SizedBox(height: 16),
                       const Text(
                         'Hours: 11:30 AM - 10:00 PM',
