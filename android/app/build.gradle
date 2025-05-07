@@ -1,3 +1,9 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id 'dev.flutter.flutter-gradle-plugin'
+}
+
 def localProperties = new Properties()
 def localPropertiesFile = rootProject.file('local.properties')
 if (localPropertiesFile.exists()) {
@@ -21,15 +27,9 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
-plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-    id 'dev.flutter.flutter-gradle-plugin'
-}
-
 android {
     namespace "com.rit.grubpoint"
-    compileSdk 34
+    compileSdkVersion 33
     ndkVersion flutter.ndkVersion
 
     compileOptions {
@@ -47,8 +47,8 @@ android {
 
     defaultConfig {
         applicationId "com.rit.grubpoint"
-        minSdk 21
-        targetSdk 34
+        minSdkVersion 21
+        targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
