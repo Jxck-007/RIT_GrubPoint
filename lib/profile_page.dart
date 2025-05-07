@@ -4,6 +4,7 @@ import 'main.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/reservation_screen.dart';
 import 'services/firebase_service.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -20,6 +21,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = false;
   bool _isFirebaseAvailable = true;
   bool _isEditing = false;
+  double? _walletBalance;
+  final TextEditingController _rechargeAmountController = TextEditingController();
 
   // Sample order history
   final List<Map<String, String>> _orderHistory = [
@@ -31,6 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _loadUserData();
+    _fetchWalletBalance();
   }
 
   Future<void> _loadUserData() async {
@@ -70,6 +74,22 @@ class _ProfilePageState extends State<ProfilePage> {
     } finally {
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchWalletBalance() async {
+    try {
+      final user = _firebaseService.getCurrentUser();
+      if (user != null) {
+        final userData = await _firebaseService.getUserProfile(user.uid);
+        setState(() {
+          _walletBalance = (userData?['walletBalance'] ?? 0).toDouble();
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _walletBalance = 0;
       });
     }
   }
@@ -131,11 +151,65 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _showRechargeDialog() async {
+    _rechargeAmountController.clear();
+    await showDialog(
+      context: context,
+      builder: (context) {
+        String upiId = 'your-upi-id@bank'; // Replace with your UPI ID
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('Recharge Wallet'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _rechargeAmountController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Enter amount',
+                      prefixIcon: Icon(Icons.currency_rupee),
+                    ),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 16),
+                  QrImageView(
+                    data: 'upi://pay?pa=$upiId&pn=RIT GrubPoint&am=${_rechargeAmountController.text.isEmpty ? '0' : _rechargeAmountController.text}&cu=INR&tn=Wallet Recharge',
+                    version: QrVersions.auto,
+                    size: 180.0,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  // For now, just show a message. Admin approval logic can be added later.
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Recharge request submitted. Admin will approve soon.')),
+                  );
+                },
+                child: const Text('I have paid'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _rechargeAmountController.dispose();
     super.dispose();
   }
 
@@ -273,6 +347,46 @@ class _ProfilePageState extends State<ProfilePage> {
                             onTap: () {},
                           ),
                         ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    // Wallet Section
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      color: Colors.amber[50],
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Icon(Icons.account_balance_wallet, color: Colors.orange, size: 28),
+                                    const SizedBox(width: 8),
+                                    const Text('Wallet Balance:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                Text(
+                                  _walletBalance == null ? 'Loading...' : '₹${_walletBalance!.toStringAsFixed(2)}',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.orange),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                icon: const Icon(Icons.qr_code),
+                                label: const Text('Recharge Wallet'),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                                onPressed: _showRechargeDialog,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],

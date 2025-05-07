@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/cart_provider.dart';
-import '../services/razorpay_payment_service.dart';
+import '../services/payment_service.dart';
+import '../services/firebase_service.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({Key? key}) : super(key: key);
@@ -16,61 +16,24 @@ class _PaymentPageState extends State<PaymentPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
-  late final RazorpayPaymentService _razorpayService;
+  String _selectedPaymentMethod = 'wallet';
+  double? _walletBalance;
+  final FirebaseService _firebaseService = FirebaseService();
 
   @override
   void initState() {
     super.initState();
-    _razorpayService = RazorpayPaymentService();
-    _setupPaymentHandlers();
+    _fetchWalletBalance();
   }
 
-  void _setupPaymentHandlers() {
-    _razorpayService.onPaymentSuccess = (PaymentSuccessResponse response) {
-      // Handle payment success
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Payment Successful!'),
-            content: Text('Payment ID: ${response.paymentId}'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pop(); // Go back to cart
-                  context.read<CartProvider>().clearCart(); // Clear the cart
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    };
-
-    _razorpayService.onPaymentError = (PaymentFailureResponse response) {
-      // Handle payment failure
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Payment failed: ${response.message}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    };
-
-    _razorpayService.onExternalWallet = (ExternalWalletResponse response) {
-      // Handle external wallet selection
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('External wallet selected: ${response.walletName}'),
-          ),
-        );
-      }
-    };
+  Future<void> _fetchWalletBalance() async {
+    final user = _firebaseService.getCurrentUser();
+    if (user != null) {
+      final userData = await _firebaseService.getUserProfile(user.uid);
+      setState(() {
+        _walletBalance = (userData?['walletBalance'] ?? 0).toDouble();
+      });
+    }
   }
 
   @override
@@ -78,11 +41,10 @@ class _PaymentPageState extends State<PaymentPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _razorpayService.dispose();
     super.dispose();
   }
 
-  void _processPayment() {
+  Future<void> _processPayment() async {
     if (_nameController.text.isEmpty ||
         _emailController.text.isEmpty ||
         _phoneController.text.isEmpty) {
@@ -96,19 +58,52 @@ class _PaymentPageState extends State<PaymentPage> {
 
     try {
       final cart = context.read<CartProvider>();
-      _razorpayService.openPayment(
-        amount: cart.totalAmount,
-        name: _nameController.text,
-        email: _emailController.text,
-        contact: _phoneController.text,
-        description: 'RIT GrubPoint Order - ${cart.items.length} items',
-      );
+      final amount = cart.totalAmount;
+      if (_selectedPaymentMethod == 'wallet') {
+        final user = _firebaseService.getCurrentUser();
+        if (user == null) throw Exception('User not logged in');
+        if ((_walletBalance ?? 0) < amount) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Insufficient wallet balance. Please recharge.')),
+          );
+          setState(() => _isLoading = false);
+          return;
+        }
+        // Deduct from wallet
+        final newBalance = (_walletBalance ?? 0) - amount;
+        await _firebaseService.saveUserProfile(user.uid, {'walletBalance': newBalance});
+        setState(() => _walletBalance = newBalance);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Payment successful via Wallet!'), backgroundColor: Colors.green),
+        );
+        context.read<CartProvider>().clearCart();
+        if (mounted) Navigator.of(context).pop();
+        return;
+      } else {
+        final success = await PaymentService.processPayment(
+          amount: amount.toString(),
+          orderId: DateTime.now().millisecondsSinceEpoch.toString(),
+          description: 'RIT GrubPoint Order - ${cart.items.length} items',
+          merchantName: 'RIT GrubPoint',
+          context: context,
+        );
+        if (success) {
+          context.read<CartProvider>().clearCart();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        }
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -203,24 +198,43 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                   keyboardType: TextInputType.phone,
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
+                Text('Select Payment Method:', style: TextStyle(fontWeight: FontWeight.bold)),
+                Row(
+                  children: [
+                    Radio<String>(
+                      value: 'wallet',
+                      groupValue: _selectedPaymentMethod,
+                      onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
+                    ),
+                    const Text('Wallet'),
+                    if (_walletBalance != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4.0),
+                        child: Text('₹${_walletBalance!.toStringAsFixed(2)}', style: TextStyle(color: Colors.orange)),
+                      ),
+                    Radio<String>(
+                      value: 'upi',
+                      groupValue: _selectedPaymentMethod,
+                      onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
+                    ),
+                    const Text('UPI'),
+                  ],
+                ),
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
+                  height: 50,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _processPayment,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.all(16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
+                        ? const CircularProgressIndicator(color: Colors.white)
                         : const Text(
                             'Pay Now',
                             style: TextStyle(

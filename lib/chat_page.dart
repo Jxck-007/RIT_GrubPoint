@@ -46,10 +46,9 @@ class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin
     _controller.clear();
     _animationController.forward(from: 0.0);
     
-    // Simulate typing delay
-    await Future.delayed(const Duration(milliseconds: 500));
+    // Get response from Dialogflow
+    final response = await ChatService.getResponse(text);
     
-    final response = ChatService.getResponse(text);
     setState(() {
       _isTyping = false;
       ChatService.addMessage({'role': 'bot', 'text': response});
