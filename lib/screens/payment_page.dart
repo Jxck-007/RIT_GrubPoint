@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import '../providers/cart_provider.dart';
+import '../services/razorpay_payment_service.dart';
 
 class PaymentPage extends StatefulWidget {
   const PaymentPage({Key? key}) : super(key: key);
@@ -10,77 +12,103 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  String _selectedPaymentMethod = 'card';
-  final _cardNumberController = TextEditingController();
-  final _expiryController = TextEditingController();
-  final _cvvController = TextEditingController();
   final _nameController = TextEditingController();
-  final _upiIdController = TextEditingController();
-  final _netBankingController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   bool _isLoading = false;
+  late final RazorpayPaymentService _razorpayService;
+
+  @override
+  void initState() {
+    super.initState();
+    _razorpayService = RazorpayPaymentService();
+    _setupPaymentHandlers();
+  }
+
+  void _setupPaymentHandlers() {
+    _razorpayService.onPaymentSuccess = (PaymentSuccessResponse response) {
+      // Handle payment success
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Payment Successful!'),
+            content: Text('Payment ID: ${response.paymentId}'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(); // Go back to cart
+                  context.read<CartProvider>().clearCart(); // Clear the cart
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    };
+
+    _razorpayService.onPaymentError = (PaymentFailureResponse response) {
+      // Handle payment failure
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Payment failed: ${response.message}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    };
+
+    _razorpayService.onExternalWallet = (ExternalWalletResponse response) {
+      // Handle external wallet selection
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('External wallet selected: ${response.walletName}'),
+          ),
+        );
+      }
+    };
+  }
 
   @override
   void dispose() {
-    _cardNumberController.dispose();
-    _expiryController.dispose();
-    _cvvController.dispose();
     _nameController.dispose();
-    _upiIdController.dispose();
-    _netBankingController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _razorpayService.dispose();
     super.dispose();
   }
 
-  void _processPayment() async {
-    if (_selectedPaymentMethod == 'card' && 
-        (_cardNumberController.text.isEmpty || 
-         _expiryController.text.isEmpty || 
-         _cvvController.text.isEmpty || 
-         _nameController.text.isEmpty)) {
+  void _processPayment() {
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _phoneController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all card details')),
-      );
-      return;
-    }
-
-    if (_selectedPaymentMethod == 'upi' && _upiIdController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter UPI ID')),
-      );
-      return;
-    }
-
-    if (_selectedPaymentMethod == 'netbanking' && _netBankingController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your bank')),
+        const SnackBar(content: Text('Please fill in all required details')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
 
-    // Simulate payment processing
-    await Future.delayed(const Duration(seconds: 2));
-
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Payment Successful!'),
-          content: const Text('Your order has been placed successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog
-                Navigator.of(context).pop(); // Go back to cart
-                context.read<CartProvider>().clearCart(); // Clear the cart
-              },
-              child: const Text('OK'),
-            ),
-          ],
-        ),
+    try {
+      final cart = context.read<CartProvider>();
+      _razorpayService.openPayment(
+        amount: cart.totalAmount,
+        name: _nameController.text,
+        email: _emailController.text,
+        contact: _phoneController.text,
+        description: 'RIT GrubPoint Order - ${cart.items.length} items',
       );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -150,205 +178,32 @@ class _PaymentPageState extends State<PaymentPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Select Payment Method',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    border: OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  child: Column(
-                    children: [
-                      RadioListTile(
-                        title: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Image.asset(
-                                  'assets/credit_card.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Credit/Debit Card'),
-                          ],
-                        ),
-                        value: 'card',
-                        groupValue: _selectedPaymentMethod,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPaymentMethod = value.toString();
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Image.asset(
-                                  'assets/upi.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('UPI'),
-                          ],
-                        ),
-                        value: 'upi',
-                        groupValue: _selectedPaymentMethod,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPaymentMethod = value.toString();
-                          });
-                        },
-                      ),
-                      RadioListTile(
-                        title: Row(
-                          children: [
-                            Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(4.0),
-                                child: Image.asset(
-                                  'assets/netbanking.png',
-                                  fit: BoxFit.contain,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('Net Banking'),
-                          ],
-                        ),
-                        value: 'netbanking',
-                        groupValue: _selectedPaymentMethod,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedPaymentMethod = value.toString();
-                          });
-                        },
-                      ),
-                    ],
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
                   ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.phone,
                 ),
                 const SizedBox(height: 20),
-                if (_selectedPaymentMethod == 'card') ...[
-                  TextField(
-                    controller: _cardNumberController,
-                    decoration: InputDecoration(
-                      labelText: 'Card Number',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      prefixIcon: const Icon(Icons.credit_card),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _expiryController,
-                          decoration: InputDecoration(
-                            labelText: 'Expiry Date',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            hintText: 'MM/YY',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: _cvvController,
-                          decoration: InputDecoration(
-                            labelText: 'CVV',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          keyboardType: TextInputType.number,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Card Holder Name',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      prefixIcon: const Icon(Icons.person),
-                    ),
-                  ),
-                ] else if (_selectedPaymentMethod == 'upi') ...[
-                  TextField(
-                    controller: _upiIdController,
-                    decoration: InputDecoration(
-                      labelText: 'UPI ID',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      prefixIcon: const Icon(Icons.payment),
-                      hintText: 'example@upi',
-                    ),
-                  ),
-                ] else if (_selectedPaymentMethod == 'netbanking') ...[
-                  DropdownButtonFormField<String>(
-                    decoration: InputDecoration(
-                      labelText: 'Select Bank',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      prefixIcon: const Icon(Icons.account_balance),
-                    ),
-                    items: [
-                      'State Bank of India',
-                      'HDFC Bank',
-                      'ICICI Bank',
-                      'Axis Bank',
-                      'Punjab National Bank',
-                    ].map((String bank) {
-                      return DropdownMenuItem<String>(
-                        value: bank,
-                        child: Text(bank),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _netBankingController.text = newValue ?? '';
-                      });
-                    },
-                  ),
-                ],
-                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
