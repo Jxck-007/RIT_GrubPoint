@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dialogflow_service.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 
 class ChatService {
   static String? _userName;
@@ -10,25 +10,33 @@ class ChatService {
   // Singleton pattern
   static final ChatService _instance = ChatService._internal();
 
-  factory ChatService() {
-    return _instance;
-  }
+  factory ChatService() => _instance;
 
-  ChatService._internal() {
-    _initialize();
-  }
+  ChatService._internal();
 
-  static Future<void> _initialize() async {
+  late final GenerativeModel _model;
+  late final ChatSession _chat;
+
+  bool get isApiKeyConfigured => _isInitialized;
+
+  Future<void> initialize() async {
     if (_isInitialized) return;
-    
-    await DialogflowService.initialize();
+
+    final apiKey = dotenv.env['GEMINI_API_KEY'] ?? '';
+    if (apiKey.isEmpty) {
+      throw Exception('GEMINI_API_KEY not found in .env file');
+    }
+
+    _model = GenerativeModel(
+      model: 'gemini-pro',
+      apiKey: apiKey,
+    );
+    _chat = _model.startChat();
     _isInitialized = true;
   }
 
-  static bool get isApiKeyConfigured => _isInitialized;
-
-  static String getApiKeyWarning() {
-    return 'Warning: Chat feature is not configured. Please check your Dialogflow credentials.';
+  String getApiKeyWarning() {
+    return 'Warning: Chat feature is not configured. Please check your Google Generative AI credentials.';
   }
   
   // Update user name (call this when user name changes)
@@ -38,13 +46,13 @@ class ChatService {
   }
 
   // Get a response for the chat
-  static Future<String> getResponse(String message) async {
+  Future<String> getResponse(String message) async {
     if (!_isInitialized) {
-      await _initialize();
+      await initialize();
     }
     
     try {
-      return await DialogflowService.getResponse(message);
+      return await sendMessage(message);
     } catch (e) {
       return 'Sorry, I encountered an error. Please try again.';
     }
@@ -52,5 +60,20 @@ class ChatService {
 
   static void addMessage(Map<String, String> message) {
     messages.add(message);
+  }
+
+  Future<String> sendMessage(String message) async {
+    try {
+      final response = await _chat.sendMessage(
+        Content.text(message),
+      );
+      return response.text ?? 'Sorry, I could not process your request.';
+    } catch (e) {
+      return 'Error: ${e.toString()}';
+    }
+  }
+
+  void resetChat() {
+    _chat = _model.startChat();
   }
 } 

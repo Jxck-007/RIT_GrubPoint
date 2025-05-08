@@ -10,6 +10,8 @@ import 'providers/theme_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/menu_provider.dart';
 import 'providers/favorites_provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/wallet_provider.dart';
 import 'screens/main_navigation.dart';
 import 'screens/login_page.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -61,6 +63,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => MenuProvider()),
         ChangeNotifierProvider(create: (_) => FavoritesProvider()),
+        ChangeNotifierProvider(create: (_) => UserAuthProvider()),
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

@@ -1,5 +1,5 @@
 class MenuItem {
-  final int id;
+  final String id;
   final String name;
   final String description;
   final double price;
@@ -12,6 +12,7 @@ class MenuItem {
   final double? protein;
   final double? fat;
   final double? carbs;
+  final Map<String, String> nutritionInfo;
 
   MenuItem({
     required this.id,
@@ -19,14 +20,15 @@ class MenuItem {
     required this.description,
     required this.price,
     required this.imageUrl,
+    required this.fallbackImageUrl,
     required this.category,
     required this.rating,
     this.isAvailable = true,
-    this.fallbackImageUrl = 'assets/LOGO.png',
     this.calories,
     this.protein,
     this.fat,
     this.carbs,
+    this.nutritionInfo = const {},
   });
 
   Map<String, dynamic> toJson() => {
@@ -43,14 +45,15 @@ class MenuItem {
     'protein': protein,
     'fat': fat,
     'carbs': carbs,
+    'nutritionInfo': nutritionInfo,
   };
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
-      id: json['id'] as int,
+      id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String,
-      price: json['price'] as double,
+      price: (json['price'] as num).toDouble(),
       imageUrl: json['imageUrl'] as String,
       fallbackImageUrl: json['fallbackImageUrl'] as String? ?? 'assets/LOGO.png',
       category: json['category'] as String,
@@ -60,6 +63,7 @@ class MenuItem {
       protein: (json['protein'] as num?)?.toDouble(),
       fat: (json['fat'] as num?)?.toDouble(),
       carbs: (json['carbs'] as num?)?.toDouble(),
+      nutritionInfo: Map<String, String>.from(json['nutritionInfo'] ?? {}),
     );
   }
 
@@ -74,7 +78,7 @@ class MenuItem {
   int get hashCode => id.hashCode;
 
   MenuItem copyWith({
-    int? id,
+    String? id,
     String? name,
     String? description,
     double? price,
@@ -87,6 +91,7 @@ class MenuItem {
     double? protein,
     double? fat,
     double? carbs,
+    Map<String, String>? nutritionInfo,
   }) {
     return MenuItem(
       id: id ?? this.id,
@@ -102,6 +107,7 @@ class MenuItem {
       protein: protein ?? this.protein,
       fat: fat ?? this.fat,
       carbs: carbs ?? this.carbs,
+      nutritionInfo: nutritionInfo ?? this.nutritionInfo,
     );
   }
 } 

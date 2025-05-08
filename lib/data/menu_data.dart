@@ -47,7 +47,7 @@ final Map<String, String> itemFallbackImages = {
 final List<MenuItem> demoMenuItems = [
   // Aaharam Items (South Indian)
   MenuItem(
-    id: 1,
+    id: '1',
     name: 'Idly',
     description: 'Steamed rice cakes served with sambar and coconut chutney',
     price: 30,
@@ -61,7 +61,7 @@ final List<MenuItem> demoMenuItems = [
     carbs: 25,
   ),
   MenuItem(
-    id: 2,
+    id: '2',
     name: 'Ghee Roast',
     description: 'Crispy dosa made with ghee, served with sambar and chutney',
     price: 60,
@@ -75,7 +75,7 @@ final List<MenuItem> demoMenuItems = [
     carbs: 40,
   ),
   MenuItem(
-    id: 3,
+    id: '3',
     name: 'Plain Dosa',
     description: 'Classic crispy dosa served with sambar and coconut chutney',
     price: 60,
@@ -89,7 +89,7 @@ final List<MenuItem> demoMenuItems = [
     carbs: 35,
   ),
   MenuItem(
-    id: 4,
+    id: '4',
     name: 'Vadai',
     description: 'Crispy fried lentil fritters served with sambar and chutney',
     price: 10,
@@ -99,7 +99,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.4,
   ),
   MenuItem(
-    id: 5,
+    id: '5',
     name: 'Meals',
     description: 'Complete meal with rice, sambar, rasam, curd, 3 vegetables, papad, and pickle',
     price: 80,
@@ -111,7 +111,7 @@ final List<MenuItem> demoMenuItems = [
 
   // Little Rangoon Items (Chinese/Indian Fusion)
   MenuItem(
-    id: 6,
+    id: '6',
     name: 'Veg Fried Rice',
     description: 'Stir-fried rice with mixed vegetables and Chinese spices',
     price: 40,
@@ -125,7 +125,7 @@ final List<MenuItem> demoMenuItems = [
     carbs: 40,
   ),
   MenuItem(
-    id: 7,
+    id: '7',
     name: 'Egg Fried Rice',
     description: 'Stir-fried rice with scrambled eggs and vegetables',
     price: 50,
@@ -135,7 +135,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.7,
   ),
   MenuItem(
-    id: 8,
+    id: '8',
     name: 'Gobi Manchurian',
     description: 'Crispy fried cauliflower in spicy Chinese sauce',
     price: 50,
@@ -145,7 +145,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.6,
   ),
   MenuItem(
-    id: 9,
+    id: '9',
     name: 'Chilli Paneer',
     description: 'Crispy paneer cubes in spicy Chinese sauce',
     price: 50,
@@ -157,7 +157,7 @@ final List<MenuItem> demoMenuItems = [
 
   // The Pacific Cafe Items (Fast Food & Beverages)
   MenuItem(
-    id: 10,
+    id: '10',
     name: 'Veg Noodles',
     description: 'Stir-fried noodles with mixed vegetables',
     price: 50,
@@ -167,110 +167,121 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.5,
   ),
   MenuItem(
-    id: 11,
+    id: '11',
     name: 'Chocolate Milkshake',
     description: 'Rich and creamy chocolate milkshake with whipped cream',
     price: 140,
     imageUrl: 'assets/images/chocolate_milkshake.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'The Pacific Cafe',
     rating: 4.6,
   ),
   MenuItem(
-    id: 12,
+    id: '12',
     name: 'Cold Coffee',
     description: 'Iced coffee with milk and sugar',
     price: 160,
     imageUrl: 'assets/images/cold_coffee.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'The Pacific Cafe',
     rating: 4.8,
   ),
   MenuItem(
-    id: 13,
+    id: '13',
     name: 'Fruit Smoothie',
     description: 'Blended fresh fruits with yogurt and honey',
     price: 90,
     imageUrl: 'assets/images/fruit_smoothie.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'The Pacific Cafe',
     rating: 4.5,
   ),
 
   // Cantina de Naples Items (Italian)
   MenuItem(
-    id: 14,
+    id: '14',
     name: 'Pizza',
     description: 'Classic pizza with tomato sauce, mozzarella, and choice of toppings',
     price: 180,
     imageUrl: 'assets/images/pizza.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Cantina de Naples',
     rating: 4.8,
   ),
   MenuItem(
-    id: 15,
+    id: '15',
     name: 'Spaghetti Pizza',
     description: 'Pizza topped with spaghetti and cheese',
     price: 150,
     imageUrl: 'assets/images/spaghetti_pizza.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Cantina de Naples',
     rating: 4.7,
   ),
   MenuItem(
-    id: 16,
+    id: '16',
     name: 'Risotto al Funghi',
     description: 'Creamy mushroom risotto with parmesan cheese',
     price: 170,
     imageUrl: 'assets/images/risotto.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Cantina de Naples',
     rating: 4.6,
   ),
   MenuItem(
-    id: 17,
+    id: '17',
     name: 'Tiramisu',
     description: 'Classic Italian dessert with coffee and mascarpone',
     price: 90,
     imageUrl: 'assets/images/tiramisu.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Cantina de Naples',
     rating: 4.9,
   ),
 
   // Calcutta in a Box Items (Bengali)
   MenuItem(
-    id: 18,
+    id: '18',
     name: 'Samosa',
     description: 'Crunchy fried pastry filled with spiced potatoes and peas',
     price: 12,
     imageUrl: 'assets/images/kathi_roll.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Calcutta in a Box',
     rating: 4.7,
   ),
   MenuItem(
-    id: 19,
+    id: '19',
     name: 'Egg Cutlet',
     description: 'Fried egg wrapped in a crispy pastry',
     price: 30,
     imageUrl: 'assets/images/fish_curry.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Calcutta in a Box',
     rating: 4.6,
   ),
   MenuItem(
-    id: 20,
+    id: '20',
     name: 'Sandwich',
     description: 'Bread filled with egg, cheese, and vegetables',
     price: 50,
     imageUrl: 'assets/images/mutton_kosha.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Calcutta in a Box',
     rating: 4.8,
   ),
   MenuItem(
-    id: 21,
+    id: '21',
     name: 'Kachori',
     description: 'Deep-fried pastry filled with spiced potatoes and peas',
     price: 30,
     imageUrl: 'assets/images/mishti_doi.jpg',
+    fallbackImageUrl: 'assets/LOGO.png',
     category: 'Calcutta in a Box',
     rating: 4.9,
   ),
   MenuItem(
-    id: 22,
+    id: '22',
     name: 'Veg Cutlet',
     description: 'Deep-fried pastry filled with vegetables',
     price: 15,
@@ -280,7 +291,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 23,
+    id: '23',
     name: 'Allo Cutlet',
     description: 'Deep-fried pastry filled with spiced potatoes',
     price: 15,
@@ -290,7 +301,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 26,
+    id: '26',
     name: 'Bread Paneer Pakkoda',
     description: 'Bread filled with paneer and vegetables',
     price: 20,
@@ -300,7 +311,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 27,
+    id: '27',
     name: 'Veg Frankie',
     description: 'Bread filled with vegetables and mayonnaise',
     price: 35,
@@ -310,7 +321,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 28,
+    id: '28',
     name: 'Egg Frankie',
     description: 'Bread filled with egg, cheese, and vegetables',
     price: 40,
@@ -320,7 +331,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 29,
+    id: '29',
     name: 'Paneer Frankie',
     description: 'Bread filled with paneer and vegetables',
     price: 50,
@@ -330,7 +341,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 30,
+    id: '30',
     name: 'Mushroom Frankie',
     description: 'Bread filled with mushrooms and vegetables',
     price: 50,
@@ -340,7 +351,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 31,
+    id: '31',
     name: 'Gulab Jamun',
     description: 'Sweet round dessert soaked in sugar syrup',
     price: 20,
@@ -350,7 +361,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 32,
+    id: '32',
     name: 'Pani Poori',
     description: 'Round fried golgappas filled with potatoes and spices',
     price: 30,
@@ -360,7 +371,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 33,
+    id: '33',
     name: 'Bhel Poori',
     description: 'Puri with puffed rice, peanuts, and spices',
     price: 40,
@@ -370,7 +381,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 34,
+    id: '34',
     name: 'Samosa Chenna',
     description: 'Mixture of samosa and channa with spices',
     price: 40,
@@ -380,7 +391,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 0,
   ),
   MenuItem(
-    id: 35,
+    id: '35',
     name: 'Dahi Poori',
     description: 'Puri with dahi, peanuts, and spices',
     price: 40,
@@ -391,7 +402,7 @@ final List<MenuItem> demoMenuItems = [
   ),
   // --- Additional Items for Each Category ---
   MenuItem(
-    id: 36,
+    id: '36',
     name: 'Veg Thali',
     description: 'Assorted vegetarian dishes with rice and roti',
     price: 80,
@@ -401,7 +412,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.5,
   ),
   MenuItem(
-    id: 37,
+    id: '37',
     name: 'Paneer Butter Masala',
     description: 'Paneer cubes in creamy tomato gravy',
     price: 90,
@@ -411,7 +422,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.6,
   ),
   MenuItem(
-    id: 38,
+    id: '38',
     name: 'Poori Bhaji',
     description: 'Fried poori served with potato curry',
     price: 40,
@@ -421,7 +432,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.4,
   ),
   MenuItem(
-    id: 39,
+    id: '39',
     name: 'Masala Dosa',
     description: 'Crispy dosa filled with spiced potatoes',
     price: 50,
@@ -431,7 +442,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.7,
   ),
   MenuItem(
-    id: 40,
+    id: '40',
     name: 'Pav Bhaji',
     description: 'Spicy mashed vegetables served with buttered pav',
     price: 45,
@@ -441,7 +452,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.6,
   ),
   MenuItem(
-    id: 41,
+    id: '41',
     name: 'Sev Puri',
     description: 'Crispy puris topped with potatoes, chutneys, and sev',
     price: 35,
@@ -451,7 +462,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.5,
   ),
   MenuItem(
-    id: 42,
+    id: '42',
     name: 'Lassi',
     description: 'Sweet yogurt-based drink',
     price: 25,
@@ -461,7 +472,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.8,
   ),
   MenuItem(
-    id: 43,
+    id: '43',
     name: 'Masala Chai',
     description: 'Spiced Indian tea',
     price: 15,
@@ -471,7 +482,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.7,
   ),
   MenuItem(
-    id: 44,
+    id: '44',
     name: 'Samosa',
     description: 'Crispy pastry filled with spicy potatoes',
     price: 12,
@@ -481,7 +492,7 @@ final List<MenuItem> demoMenuItems = [
     rating: 4.6,
   ),
   MenuItem(
-    id: 45,
+    id: '45',
     name: 'Aloo Tikki',
     description: 'Fried potato patties served with chutney',
     price: 18,

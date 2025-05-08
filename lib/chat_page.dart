@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'services/chat_service.dart';
+import 'widgets/main_scaffold.dart';
+import 'widgets/animations.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key}) : super(key: key);
@@ -8,199 +11,168 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> with SingleTickerProviderStateMixin {
-  final TextEditingController _controller = TextEditingController();
-  List<Map<String, String>> get _messages => ChatService.messages;
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  bool _isTyping = false;
+class _ChatPageState extends State<ChatPage> {
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
-    );
+    _initializeChat();
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _controller.dispose();
-    super.dispose();
+  Future<void> _initializeChat() async {
+    try {
+      await ChatService().initialize();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(ChatService().getApiKeyWarning())),
+        );
+      }
+    }
   }
 
-  void _sendMessage() async {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    
+  Future<void> _sendMessage() async {
+    if (_messageController.text.trim().isEmpty) return;
+
+    final message = _messageController.text;
+    _messageController.clear();
     setState(() {
-      _isTyping = true;
-      ChatService.addMessage({'role': 'user', 'text': text});
+      _isLoading = true;
     });
-    
-    _controller.clear();
-    _animationController.forward(from: 0.0);
-    
-    // Get response from Dialogflow
-    final response = await ChatService.getResponse(text);
-    
-    setState(() {
-      _isTyping = false;
-      ChatService.addMessage({'role': 'bot', 'text': response});
+
+    try {
+      ChatService.addMessage({
+        'text': message,
+        'isUser': 'true',
+      });
+
+      final response = await ChatService().getResponse(message);
+      ChatService.addMessage({
+        'text': response,
+        'isUser': 'false',
+      });
+
+      if (mounted) {
+        setState(() {});
+        _scrollToBottom();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to send message')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (!ChatService.isApiKeyConfigured)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                color: Colors.orange[100],
-                child: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange[800]),
-                    const SizedBox(width: 8),
-                    Expanded(
+    return MainScaffold(
+      title: 'Chat with Jarvix',
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: ChatService.messages.length,
+              itemBuilder: (context, index) {
+                final message = ChatService.messages[index];
+                return FadeInWidget(
+                  child: Align(
+                    alignment: message['isUser'] == 'true'
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: message['isUser'] == 'true'
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       child: Text(
-                        ChatService.getApiKeyWarning(),
-                        style: TextStyle(color: Colors.orange[800], fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _messages.length + (_isTyping ? 1 : 0),
-                itemBuilder: (context, index) {
-                  if (index == _messages.length) {
-                    return _buildTypingIndicator();
-                  }
-                  
-                  final msg = _messages[index];
-                  final isUser = msg['role'] == 'user';
-                  return FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Align(
-                      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: isUser ? Colors.deepPurple[100] : Colors.grey[200],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          msg['text'] ?? '',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isUser ? Colors.deepPurple[900] : Colors.black87,
-                          ),
+                        message['text']!,
+                        style: TextStyle(
+                          color: message['isUser'] == 'true'
+                              ? Colors.white
+                              : Colors.black,
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 1,
-                    blurRadius: 3,
-                    offset: const Offset(0, -1),
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          hintText: 'Ask about food...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: BorderSide.none,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        ),
-                        onSubmitted: (_) => _sendMessage(),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    CircleAvatar(
-                      backgroundColor: Colors.deepPurple,
-                      child: IconButton(
-                        icon: const Icon(Icons.send, color: Colors.white),
-                        onPressed: _sendMessage,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                );
+              },
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypingIndicator() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildDot(0),
-            _buildDot(1),
-            _buildDot(2),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDot(int index) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 400 + (index * 200)),
-      builder: (context, value, child) {
-        return Container(
-          width: 8,
-          height: 8,
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            color: Colors.grey[600]?.withOpacity(value),
-            shape: BoxShape.circle,
           ),
-        );
-      },
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.2),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, -1),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: const InputDecoration(
+                      hintText: 'Type a message...',
+                      border: InputBorder.none,
+                    ),
+                    maxLines: null,
+                  ),
+                ),
+                IconButton(
+                  icon: _isLoading
+                      ? const LoadingSpinner(size: 24)
+                      : const Icon(Icons.send),
+                  onPressed: _isLoading ? null : _sendMessage,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 } 

@@ -5,6 +5,8 @@ import 'screens/notifications_screen.dart';
 import 'screens/reservation_screen.dart';
 import 'services/firebase_service.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'widgets/main_scaffold.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -22,7 +24,9 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isFirebaseAvailable = true;
   bool _isEditing = false;
   double? _walletBalance;
+  int _totalOrders = 0;
   final TextEditingController _rechargeAmountController = TextEditingController();
+  String? _phoneError;
 
   // Sample order history
   final List<Map<String, String>> _orderHistory = [
@@ -35,6 +39,7 @@ class _ProfilePageState extends State<ProfilePage> {
     super.initState();
     _loadUserData();
     _fetchWalletBalance();
+    _fetchTotalOrders();
   }
 
   Future<void> _loadUserData() async {
@@ -94,6 +99,22 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _fetchTotalOrders() async {
+    try {
+      final user = _firebaseService.getCurrentUser();
+      if (user != null) {
+        final userData = await _firebaseService.getUserProfile(user.uid);
+        setState(() {
+          _totalOrders = userData?['totalOrders'] ?? 0;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _totalOrders = 0;
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
@@ -144,82 +165,143 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _logout() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const MyApp()),
-      (route) => false,
-    );
-  }
-
-  Future<void> _showRechargeDialog() async {
-    _rechargeAmountController.clear();
-    await showDialog(
+  Future<void> _showLogoutConfirmation() async {
+    return showDialog(
       context: context,
-      builder: (context) {
-        String upiId = 'your-upi-id@bank'; // Replace with your UPI ID
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Recharge Wallet'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _rechargeAmountController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter amount',
-                      prefixIcon: Icon(Icons.currency_rupee),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: 16),
-                  QrImageView(
-                    data: 'upi://pay?pa=$upiId&pn=RIT GrubPoint&am=${_rechargeAmountController.text.isEmpty ? '0' : _rechargeAmountController.text}&cu=INR&tn=Wallet Recharge',
-                    version: QrVersions.auto,
-                    size: 180.0,
-                  ),
-                ],
-              ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Logout'),
+          content: const Text('Are you sure you want to logout?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  // For now, just show a message. Admin approval logic can be added later.
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Recharge request submitted. Admin will approve soon.')),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                if (context.mounted) {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (context) => const MyApp()),
+                    (route) => false,
                   );
-                },
-                child: const Text('I have paid'),
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
+              child: const Text('Logout'),
+            ),
+          ],
         );
       },
     );
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _rechargeAmountController.dispose();
-    super.dispose();
+  Future<void> _showRechargeDialog() async {
+    _rechargeAmountController.clear();
+    String? errorText;
+    bool isValidAmount = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        String upiId = 'kvnk8604@okicici'; // Replace with your UPI ID
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Recharge Wallet'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _rechargeAmountController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Enter amount',
+                      prefixIcon: const Icon(Icons.currency_rupee),
+                      errorText: errorText,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        if (value.isEmpty) {
+                          errorText = 'Amount cannot be empty';
+                          isValidAmount = false;
+                        } else {
+                          final amount = double.tryParse(value);
+                          if (amount == null || amount <= 0) {
+                            errorText = 'Please enter a valid amount';
+                            isValidAmount = false;
+                          } else {
+                            errorText = null;
+                            isValidAmount = true;
+                          }
+                        }
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (isValidAmount)
+                    Container(
+                      width: 200,
+                      height: 200,
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: QrImageView(
+                        data: 'upi://pay?pa=$upiId&pn=RIT GrubPoint&am=${_rechargeAmountController.text}&cu=INR&tn=Wallet Recharge',
+                        version: QrVersions.auto,
+                        size: 200.0,
+                        backgroundColor: Colors.white,
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isValidAmount
+                      ? () async {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Recharge request submitted. Admin will approve soon.')),
+                          );
+                        }
+                      : null,
+                  child: const Text('I have paid'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  bool _validatePhoneNumber(String phone) {
+    if (phone.isEmpty) {
+      _phoneError = 'Phone number cannot be empty';
+      return false;
+    }
+    if (!RegExp(r'^\d{10}$').hasMatch(phone)) {
+      _phoneError = 'Please enter a valid 10-digit phone number';
+      return false;
+    }
+    _phoneError = null;
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final onBg = Theme.of(context).colorScheme.onSurface;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-      ),
+    return MainScaffold(
+      title: 'My Profile',
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -251,6 +333,35 @@ class _ProfilePageState extends State<ProfilePage> {
                       style: TextStyle(fontSize: 15, color: onBg.withOpacity(0.7)),
                     ),
                     const SizedBox(height: 32),
+
+                    // Stats Section
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildStatItem(
+                              context,
+                              'Wallet Balance',
+                              '₹${_walletBalance?.toStringAsFixed(2) ?? '0.00'}',
+                              Icons.account_balance_wallet,
+                              Colors.green,
+                            ),
+                            _buildStatItem(
+                              context,
+                              'Total Orders',
+                              _totalOrders.toString(),
+                              Icons.shopping_bag,
+                              Colors.blue,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     // Settings & Preferences Section
                     Align(
                       alignment: Alignment.centerLeft,
@@ -276,18 +387,18 @@ class _ProfilePageState extends State<ProfilePage> {
                               Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()));
                             },
                           ),
+                          const Divider(height: 0),
                           ListTile(
-                            leading: const Icon(Icons.calendar_today, color: Colors.green),
-                            title: const Text('My Reservations'),
+                            leading: const Icon(Icons.account_balance_wallet, color: Colors.green),
+                            title: const Text('Recharge Wallet'),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ReservationScreen()));
-                            },
+                            onTap: _showRechargeDialog,
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 28),
+
                     // Account Information Section
                     Align(
                       alignment: Alignment.centerLeft,
@@ -340,53 +451,63 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           const Divider(height: 0),
                           ListTile(
-                            leading: const Icon(Icons.phone, color: Colors.green),
-                            title: const Text('Contact Information'),
-                            subtitle: Text(_phoneController.text, style: TextStyle(color: onBg.withOpacity(0.8))),
+                            leading: const Icon(Icons.phone, color: Colors.orange),
+                            title: const Text('Change Phone'),
                             trailing: const Icon(Icons.chevron_right),
-                            onTap: () {},
+                            onTap: () {
+                              setState(() {
+                                _isEditing = true;
+                              });
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Change Phone'),
+                                  content: TextField(
+                                    controller: _phoneController,
+                                    keyboardType: TextInputType.phone,
+                                    decoration: InputDecoration(
+                                      labelText: 'Phone',
+                                      errorText: _phoneError,
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _validatePhoneNumber(value);
+                                      });
+                                    },
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        if (_validatePhoneNumber(_phoneController.text)) {
+                                          _saveProfile();
+                                          Navigator.pop(context);
+                                        }
+                                      },
+                                      child: const Text('Save'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // Wallet Section
-                    Card(
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      color: Colors.amber[50],
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.account_balance_wallet, color: Colors.orange, size: 28),
-                                    const SizedBox(width: 8),
-                                    const Text('Wallet Balance:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                Text(
-                                  _walletBalance == null ? 'Loading...' : '₹${_walletBalance!.toStringAsFixed(2)}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.orange),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                icon: const Icon(Icons.qr_code),
-                                label: const Text('Recharge Wallet'),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                                onPressed: _showRechargeDialog,
-                              ),
-                            ),
-                          ],
-                        ),
+
+                    // Logout Button
+                    ElevatedButton.icon(
+                      onPressed: _showLogoutConfirmation,
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Logout'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                       ),
                     ),
                   ],
@@ -394,5 +515,39 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ),
     );
+  }
+
+  Widget _buildStatItem(BuildContext context, String title, String value, IconData icon, Color color) {
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 32),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _rechargeAmountController.dispose();
+    super.dispose();
   }
 } 

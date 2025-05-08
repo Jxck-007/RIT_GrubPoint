@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
 import '../providers/favorites_provider.dart';
+import 'nutrition_info.dart';
 
 class ItemPreview extends StatelessWidget {
   final MenuItem item;
@@ -244,6 +245,12 @@ class ItemPreviewPage extends StatelessWidget {
                             ),
                           ],
                           const SizedBox(height: 32),
+                          if (item.nutritionInfo.isNotEmpty)
+                            NutritionInfo(
+                              itemName: item.name,
+                              nutritionData: item.nutritionInfo,
+                            ),
+                          const SizedBox(height: 32),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
@@ -479,6 +486,12 @@ class ItemPreviewPage extends StatelessWidget {
                         ],
                       ),
                     ],
+                    const SizedBox(height: 32),
+                    if (item.nutritionInfo.isNotEmpty)
+                      NutritionInfo(
+                        itemName: item.name,
+                        nutritionData: item.nutritionInfo,
+                      ),
                     const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
