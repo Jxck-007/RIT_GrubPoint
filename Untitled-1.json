@@ -1,0 +1,6 @@
+{
+  "dart.devToolsBrowser": "chrome",
+  "terminal.integrated.profiles.linux": {
+    "bash": null
+  }
+}
