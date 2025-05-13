@@ -1,16 +1,51 @@
-# myapp
+# RIT GrubPoint
 
-A new Flutter project.
+A food ordering app for RIT students with wallet payment system and reservation features.
+
+## Features
+
+- Food ordering from campus eateries
+- Wallet-based payment system
+- Firebase Phone Auth for OTP verification
+- UPI payment QR code generation
+- Table reservations (6 AM - 6 PM)
+- User profiles and favorites
+- Cart management
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Environment Setup
 
-A few resources to get you started if this is your first Flutter project:
+Create a file named `.env` in the `assets/` directory with the following content:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```
+# Firebase Configuration
+FIREBASE_API_KEY=your-api-key-here
+FIREBASE_APP_ID=your-app-id-here  
+FIREBASE_MESSAGING_SENDER_ID=your-sender-id-here
+FIREBASE_PROJECT_ID=your-project-id-here
+FIREBASE_STORAGE_BUCKET=your-storage-bucket-here
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# Google Auth
+GOOGLE_AUTH_CLIENT_ID=your-client-id-here
+```
+
+Replace the placeholder values with your actual Firebase project credentials.
+
+### Running the App
+
+1. Ensure Flutter SDK is installed
+2. Run `flutter pub get` to install dependencies
+3. Run `flutter run` to start the app in debug mode
+
+## Development
+
+This project uses Flutter and Firebase for backend services:
+
+- Firebase Authentication for user accounts and phone verification
+- Firestore for storing menu items, user data, and reservation information
+- Firebase Storage for images
+
+## Contribution
+
+Contributions are welcome! Please create a pull request for any enhancements or bug fixes.
