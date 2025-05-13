@@ -24,6 +24,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
   
   // Available time slots
   final List<TimeOfDay> _availableTimeSlots = [
+<<<<<<< HEAD
     const TimeOfDay(hour: 6, minute: 0),
     const TimeOfDay(hour: 7, minute: 0),
     const TimeOfDay(hour: 8, minute: 0),
@@ -37,6 +38,20 @@ class _ReservationScreenState extends State<ReservationScreen> {
     const TimeOfDay(hour: 16, minute: 0),
     const TimeOfDay(hour: 17, minute: 0),
     const TimeOfDay(hour: 18, minute: 0),
+=======
+    const TimeOfDay(hour: 11, minute: 30),
+    const TimeOfDay(hour: 12, minute: 0),
+    const TimeOfDay(hour: 12, minute: 30),
+    const TimeOfDay(hour: 13, minute: 0),
+    const TimeOfDay(hour: 13, minute: 30),
+    const TimeOfDay(hour: 17, minute: 0),
+    const TimeOfDay(hour: 17, minute: 30),
+    const TimeOfDay(hour: 18, minute: 0),
+    const TimeOfDay(hour: 18, minute: 30),
+    const TimeOfDay(hour: 19, minute: 0),
+    const TimeOfDay(hour: 19, minute: 30),
+    const TimeOfDay(hour: 20, minute: 0),
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
   ];
   
   // List of reservations (would normally be fetched from a database)
@@ -84,6 +99,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+<<<<<<< HEAD
         
         // If selected date is today, filter out past time slots
         if (picked.year == DateTime.now().year && 
@@ -125,6 +141,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
       }
     }
   }
+=======
+      });
+    }
+  }
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
 
   void _makeReservation() async {
     if (_formKey.currentState!.validate()) {
@@ -240,7 +261,11 @@ class _ReservationScreenState extends State<ReservationScreen> {
                       ),
                       const SizedBox(height: 16),
                       const Text(
+<<<<<<< HEAD
                         'Hours: 6:00 AM - 6:00 PM',
+=======
+                        'Hours: 11:30 AM - 10:00 PM',
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
                         style: TextStyle(
                           color: Colors.grey,
                         ),

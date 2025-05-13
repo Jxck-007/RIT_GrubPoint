@@ -127,6 +127,7 @@ class FirebaseService {
       return null;
     }
   }
+<<<<<<< HEAD
   
   // Run a transaction in Firestore
   Future<void> runTransaction(Future<void> Function(Transaction) updateFunction) async {
@@ -137,4 +138,6 @@ class FirebaseService {
       throw e;
     }
   }
+=======
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
 } 

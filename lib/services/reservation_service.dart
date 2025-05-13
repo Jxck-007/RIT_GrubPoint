@@ -8,6 +8,7 @@ class ReservationService {
   Future<void> createReservation(DateTime reservationTime) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
+<<<<<<< HEAD
     
     // Check if reservation time is within allowed hours (6:00 AM - 6:00 PM)
     if (reservationTime.hour < 6 || reservationTime.hour >= 18) {
@@ -18,6 +19,8 @@ class ReservationService {
     if (reservationTime.isBefore(DateTime.now())) {
       throw Exception('Cannot make reservations for past times');
     }
+=======
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
 
     await _firestore.collection('reservations').add({
       'userId': user.uid,
@@ -46,6 +49,7 @@ class ReservationService {
   }
 
   Future<bool> isTimeSlotAvailable(DateTime reservationTime) async {
+<<<<<<< HEAD
     // Check if reservation time is within allowed hours (6:00 AM - 6:00 PM)
     if (reservationTime.hour < 6 || reservationTime.hour >= 18) {
       return false;
@@ -56,6 +60,8 @@ class ReservationService {
       return false;
     }
   
+=======
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
     final startOfDay = DateTime(
       reservationTime.year,
       reservationTime.month,

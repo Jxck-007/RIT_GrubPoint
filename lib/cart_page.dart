@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
+<<<<<<< HEAD
 import 'providers/wallet_provider.dart';
 import 'screens/payment_page.dart';
 import 'widgets/app_drawer.dart';
+=======
+import 'screens/payment_page.dart';
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
 
 class CartPage extends StatelessWidget {
   const CartPage({Key? key}) : super(key: key);
@@ -13,11 +17,14 @@ class CartPage extends StatelessWidget {
     return Consumer<CartProvider>(
       builder: (context, cart, child) {
         return Scaffold(
+<<<<<<< HEAD
           appBar: AppBar(
             title: const Text('Cart'),
             automaticallyImplyLeading: true,
           ),
           drawer: const AppDrawer(),
+=======
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
           body: cart.items.isEmpty
               ? const Center(
                   child: Text('Your cart is empty'),
@@ -113,6 +120,7 @@ class CartPage extends StatelessWidget {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
+<<<<<<< HEAD
                           onPressed: () async {
                             // Pre-load wallet balance
                             await context.read<WalletProvider>().loadBalance();
@@ -128,6 +136,15 @@ class CartPage extends StatelessWidget {
                                 context.read<WalletProvider>().loadBalance();
                               });
                             }
+=======
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PaymentPage(),
+                              ),
+                            );
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
                           },
                           child: const Padding(
                             padding: EdgeInsets.all(12.0),

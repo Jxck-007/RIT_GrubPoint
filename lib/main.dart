@@ -20,8 +20,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   
+<<<<<<< HEAD
   // Skip loading .env file for now
   print('Note: .env file loading skipped. Using default Firebase configuration.');
+=======
+  try {
+    await dotenv.load(fileName: "assets/.env");
+  } catch (e) {
+    print('Warning: .env file not found. Using default values.');
+  }
+>>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
   
   try {
     if (kIsWeb) {
