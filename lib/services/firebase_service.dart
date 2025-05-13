@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../models/reservation.dart';
 
 class FirebaseService {
   // Singleton instance
@@ -127,17 +129,33 @@ class FirebaseService {
       return null;
     }
   }
-<<<<<<< HEAD
-  
-  // Run a transaction in Firestore
-  Future<void> runTransaction(Future<void> Function(Transaction) updateFunction) async {
+
+  Future<List<Reservation>> getUserReservations(String userId) async {
     try {
-      await FirebaseFirestore.instance.runTransaction(updateFunction);
+      final snapshot = await FirebaseFirestore.instance
+          .collection('reservations')
+          .where('userId', isEqualTo: userId)
+          .orderBy('date', descending: true)
+          .get();
+
+      return snapshot.docs
+          .map((doc) => Reservation.fromMap(doc.data()))
+          .toList();
     } catch (e) {
-      print('Transaction error: $e');
-      throw e;
+      debugPrint('Error getting user reservations: $e');
+      return [];
     }
   }
-=======
->>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
+
+  Future<void> saveReservation(Reservation reservation) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('reservations')
+          .doc(reservation.id)
+          .set(reservation.toMap());
+    } catch (e) {
+      debugPrint('Error saving reservation: $e');
+      rethrow;
+    }
+  }
 } 
