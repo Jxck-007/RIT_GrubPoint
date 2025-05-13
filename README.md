@@ -1,70 +1,101 @@
-<<<<<<< HEAD
 # RIT GrubPoint
 
-A food ordering app for RIT students with wallet payment system and reservation features.
+A food ordering app for RIT students, built with Flutter and Firebase.
 
 ## Features
 
-- Food ordering from campus eateries
-- Wallet-based payment system
-- Firebase Phone Auth for OTP verification
-- UPI payment QR code generation
-- Table reservations (6 AM - 6 PM)
-- User profiles and favorites
-- Cart management
+- User authentication (email/password)
+- Browse food items
+- Add items to cart
+- Place orders
+- Wallet management
+- Table reservations
+- Order history
+- User profile management
 
 ## Getting Started
 
-### Environment Setup
+### Prerequisites
 
-Create a file named `.env` in the `assets/` directory with the following content:
+- Flutter SDK (latest version)
+- Dart SDK (latest version)
+- Firebase account
+- Android Studio / VS Code with Flutter extensions
+
+### Setup
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/rit-grubpoint.git
+cd rit-grubpoint
+```
+
+2. Install dependencies:
+```bash
+flutter pub get
+```
+
+3. Configure Firebase:
+   - Create a new Firebase project
+   - Add Android and iOS apps to your Firebase project
+   - Download and add the configuration files:
+     - `google-services.json` for Android
+     - `GoogleService-Info.plist` for iOS
+   - Enable Authentication (Email/Password)
+   - Create Firestore database
+
+4. Run the app:
+```bash
+flutter run
+```
+
+## Project Structure
 
 ```
-# Firebase Configuration
-FIREBASE_API_KEY=your-api-key-here
-FIREBASE_APP_ID=your-app-id-here  
-FIREBASE_MESSAGING_SENDER_ID=your-sender-id-here
-FIREBASE_PROJECT_ID=your-project-id-here
-FIREBASE_STORAGE_BUCKET=your-storage-bucket-here
-
-# Google Auth
-GOOGLE_AUTH_CLIENT_ID=your-client-id-here
+lib/
+  ├── main.dart
+  ├── providers/
+  │   ├── auth_provider.dart
+  │   ├── cart_provider.dart
+  │   ├── order_provider.dart
+  │   └── wallet_provider.dart
+  ├── screens/
+  │   ├── home_screen.dart
+  │   ├── login_screen.dart
+  │   ├── cart_screen.dart
+  │   ├── orders_screen.dart
+  │   ├── wallet_page.dart
+  │   ├── profile_screen.dart
+  │   ├── reservation_screen.dart
+  │   └── payment_page.dart
+  ├── services/
+  │   └── firebase_service.dart
+  └── widgets/
+      └── app_drawer.dart
 ```
 
-Replace the placeholder values with your actual Firebase project credentials.
+## Dependencies
 
-### Running the App
+- `firebase_core`: Firebase core functionality
+- `firebase_auth`: Firebase Authentication
+- `cloud_firestore`: Cloud Firestore database
+- `provider`: State management
+- `intl`: Internationalization and formatting
 
-1. Ensure Flutter SDK is installed
-2. Run `flutter pub get` to install dependencies
-3. Run `flutter run` to start the app in debug mode
+## Contributing
 
-## Development
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-This project uses Flutter and Firebase for backend services:
+## License
 
-- Firebase Authentication for user accounts and phone verification
-- Firestore for storing menu items, user data, and reservation information
-- Firebase Storage for images
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Contribution
+## Acknowledgments
 
-Contributions are welcome! Please create a pull request for any enhancements or bug fixes.
-=======
-# myapp
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
->>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
+- Flutter team for the amazing framework
+- Firebase team for the backend services
+- RIT for the inspiration

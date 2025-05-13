@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MenuItem {
   final String id;
   final String name;
@@ -13,6 +15,9 @@ class MenuItem {
   final double? fat;
   final double? carbs;
   final Map<String, String> nutritionInfo;
+  final String restaurantId;
+  final List<String> allergens;
+  final Map<String, dynamic> nutritionalInfo;
 
   MenuItem({
     required this.id,
@@ -29,6 +34,9 @@ class MenuItem {
     this.fat,
     this.carbs,
     this.nutritionInfo = const {},
+    required this.restaurantId,
+    this.allergens = const [],
+    this.nutritionalInfo = const {},
   });
 
   Map<String, dynamic> toJson() => {
@@ -46,6 +54,9 @@ class MenuItem {
     'fat': fat,
     'carbs': carbs,
     'nutritionInfo': nutritionInfo,
+    'restaurantId': restaurantId,
+    'allergens': allergens,
+    'nutritionalInfo': nutritionalInfo,
   };
 
   factory MenuItem.fromJson(Map<String, dynamic> json) {
@@ -64,6 +75,9 @@ class MenuItem {
       fat: (json['fat'] as num?)?.toDouble(),
       carbs: (json['carbs'] as num?)?.toDouble(),
       nutritionInfo: Map<String, String>.from(json['nutritionInfo'] ?? {}),
+      restaurantId: json['restaurantId'] as String,
+      allergens: List<String>.from(json['allergens'] ?? []),
+      nutritionalInfo: Map<String, dynamic>.from(json['nutritionalInfo'] ?? {}),
     );
   }
 
@@ -92,6 +106,9 @@ class MenuItem {
     double? fat,
     double? carbs,
     Map<String, String>? nutritionInfo,
+    String? restaurantId,
+    List<String>? allergens,
+    Map<String, dynamic>? nutritionalInfo,
   }) {
     return MenuItem(
       id: id ?? this.id,
@@ -108,6 +125,9 @@ class MenuItem {
       fat: fat ?? this.fat,
       carbs: carbs ?? this.carbs,
       nutritionInfo: nutritionInfo ?? this.nutritionInfo,
+      restaurantId: restaurantId ?? this.restaurantId,
+      allergens: allergens ?? this.allergens,
+      nutritionalInfo: nutritionalInfo ?? this.nutritionalInfo,
     );
   }
 } 

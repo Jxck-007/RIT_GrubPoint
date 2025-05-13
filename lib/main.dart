@@ -1,235 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:responsive_framework/responsive_framework.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'firebase_options.dart';
-import 'providers/theme_provider.dart';
-import 'providers/cart_provider.dart';
-import 'providers/menu_provider.dart';
-import 'providers/favorites_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
+import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/category_screen.dart';
+import 'screens/category_items_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/payment_page.dart';
+import 'screens/profile_screen.dart';
+import 'screens/reservation_screen.dart';
 import 'providers/auth_provider.dart';
+import 'providers/cart_provider.dart';
 import 'providers/wallet_provider.dart';
-import 'screens/main_navigation.dart';
-import 'screens/login_page.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'firebase_options.dart';
+import 'providers/order_provider.dart';
+import 'screens/orders_screen.dart';
+import 'screens/wallet_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await EasyLocalization.ensureInitialized();
-  
-<<<<<<< HEAD
-  // Skip loading .env file for now
-  print('Note: .env file loading skipped. Using default Firebase configuration.');
-=======
-  try {
-    await dotenv.load(fileName: "assets/.env");
-  } catch (e) {
-    print('Warning: .env file not found. Using default values.');
-  }
->>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
-  
-  try {
-    if (kIsWeb) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.web,
-      );
-    } else {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    runApp(
-      EasyLocalization(
-        supportedLocales: const [Locale('en')],
-        path: 'assets/langs',
-        fallbackLocale: const Locale('en'),
-        child: const MyApp(),
-      ),
-    );
-  } catch (e) {
-    print('Firebase initialization error: $e');
-    runApp(const MaterialApp(
-      home: FirebaseErrorScreen(),
-    ));
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => MenuProvider()),
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
-        ChangeNotifierProvider(create: (_) => UserAuthProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            title: 'RIT GrubPoint',
-            debugShowCheckedModeBanner: false,
-            theme: themeProvider.getTheme(),
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            builder: (context, child) => ResponsiveBreakpoints.builder(
-              child: child!,
-              breakpoints: [
-                const Breakpoint(start: 0, end: 450, name: MOBILE),
-                const Breakpoint(start: 451, end: 800, name: TABLET),
-                const Breakpoint(start: 801, end: 1920, name: DESKTOP),
-                const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
-              ],
+      child: MaterialApp(
+        title: 'RIT GrubPoint',
+        theme: ThemeData(
+          primarySwatch: Colors.orange,
+          fontFamily: 'Poppins',
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.orange,
+            brightness: Brightness.light,
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            elevation: 0,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            home: StreamBuilder<User?>(
-              stream: FirebaseAuth.instance.authStateChanges(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                return snapshot.hasData ? const MainNavigation() : const LoginPage();
-              },
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          );
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+          ),
+          cardTheme: CardTheme(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.green,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+        ),
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SplashScreen();
+            }
+            if (snapshot.hasData) {
+              return const HomeScreen();
+            }
+            return const LoginScreen();
+          },
+        ),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/register': (context) => const RegisterScreen(),
+          '/home': (context) => const HomeScreen(),
+          '/categories': (context) => const CategoryScreen(),
+          '/cart': (context) => const CartScreen(),
+          '/payment': (context) => const PaymentPage(),
+          '/profile': (context) => const ProfileScreen(),
+          '/reservation': (context) => const ReservationScreen(),
+          '/orders': (context) => const OrdersScreen(),
+          '/wallet': (context) => const WalletPage(),
         },
-      ),
-    );
-  }
-}
-
-class FirebaseErrorScreen extends StatelessWidget {
-  const FirebaseErrorScreen({super.key});
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/RITcanteenimage.png'),
-            fit: BoxFit.cover,
-            opacity: 0.1,
-          ),
-        ),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/LOGO.png', height: 120),
-                const SizedBox(height: 32),
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.red,
-                  size: 64,
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Firebase Connection Error',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Firebase services are currently unreachable. Please check your internet connection or try again later.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: () {
-                    runApp(const MyApp());
-                  },
-                  child: const Text('Retry Connection'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class WelcomePage extends StatelessWidget {
-  const WelcomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('RIT GrubPoint'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/RITcanteenimage.png'),
-            fit: BoxFit.cover,
-            opacity: 0.15,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/LOGO.png',
-                width: 150,
-                height: 150,
-              ),
-              const SizedBox(height: 32),
-              const Text(
-                'Welcome to RIT GrubPoint',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Order food from your favorite campus eateries',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Student Login'),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

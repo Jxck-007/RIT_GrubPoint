@@ -7,6 +7,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import '../providers/cart_provider.dart';
 import '../services/firebase_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/loading_animations.dart';
 import '../providers/wallet_provider.dart';
@@ -31,11 +32,14 @@ class _PaymentPageState extends State<PaymentPage> {
   bool _otpSent = false;
   bool _paymentSuccess = false;
   String _verificationId = '';
-  String _selectedPaymentMethod = 'wallet';
+  String _selectedPaymentMethod = 'Wallet';
   String? _errorMessage;
   double? _walletBalance;
   final FirebaseService _firebaseService = FirebaseService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final AuthService _authService = AuthService();
+  final _cardNumberController = TextEditingController();
+  final _expiryController = TextEditingController();
+  final _cvvController = TextEditingController();
 
   @override
   void initState() {
@@ -72,6 +76,9 @@ class _PaymentPageState extends State<PaymentPage> {
     _upiIdController.dispose();
     _amountController.dispose();
     _otpController.dispose();
+    _cardNumberController.dispose();
+    _expiryController.dispose();
+    _cvvController.dispose();
     super.dispose();
   }
 
@@ -89,11 +96,11 @@ class _PaymentPageState extends State<PaymentPage> {
         phoneNumber = '+91$phoneNumber';
       }
       
-      await _auth.verifyPhoneNumber(
+      await _authService.verifyPhoneNumber(
         phoneNumber: phoneNumber,
-        verificationCompleted: (PhoneAuthCredential credential) async {
+        onVerificationCompleted: (PhoneAuthCredential credential) async {
           try {
-            await _auth.signInWithCredential(credential);
+            await _authService.signInWithCredential(credential);
             processPaymentAfterOTP();
           } catch (e) {
             setState(() {
@@ -102,7 +109,7 @@ class _PaymentPageState extends State<PaymentPage> {
             });
           }
         },
-        verificationFailed: (FirebaseAuthException e) {
+        onVerificationFailed: (FirebaseAuthException e) {
           setState(() {
             _isLoading = false;
             _errorMessage = 'Verification failed: ${e.message}';
@@ -111,7 +118,7 @@ class _PaymentPageState extends State<PaymentPage> {
             SnackBar(content: Text('Verification failed: ${e.message}')),
           );
         },
-        codeSent: (String verificationId, int? resendToken) {
+        onCodeSent: (String verificationId, int? resendToken) {
           setState(() {
             _verificationId = verificationId;
             _otpSent = true;
@@ -121,8 +128,7 @@ class _PaymentPageState extends State<PaymentPage> {
             const SnackBar(content: Text('OTP sent to your phone')),
           );
         },
-        codeAutoRetrievalTimeout: (String verificationId) {},
-        timeout: const Duration(seconds: 60),
+        onCodeAutoRetrievalTimeout: (String verificationId) {},
       );
     } catch (e) {
       setState(() {
@@ -151,7 +157,7 @@ class _PaymentPageState extends State<PaymentPage> {
         smsCode: _otpController.text,
       );
       
-      await _auth.signInWithCredential(credential);
+      await _authService.signInWithCredential(credential);
       await processPaymentAfterOTP();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -166,7 +172,7 @@ class _PaymentPageState extends State<PaymentPage> {
       final cart = context.read<CartProvider>();
       double amount = double.tryParse(_amountController.text) ?? cart.totalAmount;
       
-      if (_selectedPaymentMethod == 'wallet') {
+      if (_selectedPaymentMethod == 'Wallet') {
         final walletProvider = context.read<WalletProvider>();
         
         if (walletProvider.balance < amount) {
@@ -179,7 +185,11 @@ class _PaymentPageState extends State<PaymentPage> {
 
         await walletProvider.deduct(amount, paymentDetails: 'RIT GrubPoint Order');
         setState(() => _paymentSuccess = true);
-      } else if (_selectedPaymentMethod == 'upi') {
+      } else if (_selectedPaymentMethod == 'Card') {
+        // Handle Card payment
+        // TODO: Implement card payment processing
+        setState(() => _paymentSuccess = true);
+      } else if (_selectedPaymentMethod == 'UPI') {
         // Handle UPI payment
         final user = _firebaseService.getCurrentUser();
         if (user == null) throw Exception('User not logged in');
@@ -208,25 +218,116 @@ class _PaymentPageState extends State<PaymentPage> {
         title: const Text('Payment'),
       ),
       drawer: const AppDrawer(),
-      body: ResponsiveLayout(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildPaymentMethodSelector(),
-                const SizedBox(height: 20),
-                _buildResponsiveFormLayout(context),
-                if (_selectedPaymentMethod == 'upi') ...[
-                  const SizedBox(height: 20),
-                  _buildUpiQrCode(),
-                ],
-                const SizedBox(height: 20),
-                _buildPaymentButton(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildPaymentMethodSelector(),
+              const SizedBox(height: 20),
+              _buildResponsiveFormLayout(context),
+              if (_selectedPaymentMethod == 'Card') ...[
+                const SizedBox(height: 24),
+                Form(
+                  key: _formKey,
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _cardNumberController,
+                            decoration: const InputDecoration(
+                              labelText: 'Card Number',
+                              prefixIcon: Icon(Icons.credit_card),
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter card number';
+                              }
+                              if (value.length < 16) {
+                                return 'Please enter a valid card number';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _expiryController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Expiry (MM/YY)',
+                                    prefixIcon: Icon(Icons.calendar_today),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter expiry date';
+                                    }
+                                    if (!RegExp(r'^\d{2}/\d{2}$').hasMatch(value)) {
+                                      return 'Please enter valid expiry date';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _cvvController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'CVV',
+                                    prefixIcon: Icon(Icons.lock),
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter CVV';
+                                    }
+                                    if (value.length < 3) {
+                                      return 'Please enter valid CVV';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _nameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Cardholder Name',
+                              prefixIcon: Icon(Icons.person),
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter cardholder name';
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
-            ),
+              const SizedBox(height: 20),
+              _buildPaymentButton(),
+            ],
           ),
         ),
       ),
@@ -250,13 +351,19 @@ class _PaymentPageState extends State<PaymentPage> {
             const SizedBox(height: 16),
             RadioListTile<String>(
               title: const Text('Wallet'),
-              value: 'wallet',
+              value: 'Wallet',
+              groupValue: _selectedPaymentMethod,
+              onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
+            ),
+            RadioListTile<String>(
+              title: const Text('Card'),
+              value: 'Card',
               groupValue: _selectedPaymentMethod,
               onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
             ),
             RadioListTile<String>(
               title: const Text('UPI'),
-              value: 'upi',
+              value: 'UPI',
               groupValue: _selectedPaymentMethod,
               onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
             ),
@@ -284,10 +391,10 @@ class _PaymentPageState extends State<PaymentPage> {
           rowFlex: 1,
           child: _buildPhoneField(),
         ),
-        if (_selectedPaymentMethod == 'upi')
+        if (_selectedPaymentMethod == 'Card')
           ResponsiveRowColumnItem(
             rowFlex: 1,
-            child: _buildUpiField(),
+            child: _buildCardField(),
           ),
         ResponsiveRowColumnItem(
           rowFlex: 1,
@@ -319,27 +426,36 @@ class _PaymentPageState extends State<PaymentPage> {
       decoration: const InputDecoration(
         labelText: 'Phone Number',
         border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.phone),
       ),
       keyboardType: TextInputType.phone,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Please enter your phone number';
         }
+        if (!RegExp(r'^\+?[0-9]{10,13}$').hasMatch(value)) {
+          return 'Please enter a valid phone number';
+        }
         return null;
       },
     );
   }
 
-  Widget _buildUpiField() {
+  Widget _buildCardField() {
     return TextFormField(
-      controller: _upiIdController,
+      controller: _cardNumberController,
       decoration: const InputDecoration(
-        labelText: 'UPI ID',
+        labelText: 'Card Number',
+        prefixIcon: Icon(Icons.credit_card),
         border: OutlineInputBorder(),
       ),
+      keyboardType: TextInputType.number,
       validator: (value) {
-        if (_selectedPaymentMethod == 'upi' && (value == null || value.isEmpty)) {
-          return 'Please enter your UPI ID';
+        if (value == null || value.isEmpty) {
+          return 'Please enter card number';
+        }
+        if (value.length < 16) {
+          return 'Please enter a valid card number';
         }
         return null;
       },
@@ -352,6 +468,7 @@ class _PaymentPageState extends State<PaymentPage> {
       decoration: const InputDecoration(
         labelText: 'Amount',
         border: OutlineInputBorder(),
+        prefixIcon: Icon(Icons.currency_rupee),
       ),
       keyboardType: TextInputType.number,
       validator: (value) {
@@ -361,39 +478,12 @@ class _PaymentPageState extends State<PaymentPage> {
         if (double.tryParse(value) == null) {
           return 'Please enter a valid amount';
         }
+        if (double.parse(value) <= 0) {
+          return 'Amount must be greater than 0';
+        }
         return null;
       },
     );
-  }
-
-  Widget _buildUpiQrCode() {
-    return Consumer<CartProvider>(
-      builder: (context, cart, child) {
-        return Column(
-          children: [
-            const Text(
-              'Scan QR Code to Pay',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            QrImageView(
-              data: _generateUpiUrl(cart.totalAmount),
-              version: QrVersions.auto,
-              size: 200.0,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  String _generateUpiUrl(double amount) {
-    final upiId = _upiIdController.text;
-    final name = _nameController.text;
-    return 'upi://pay?pa=$upiId&pn=$name&am=$amount&cu=INR&tn=RIT GrubPoint Order';
   }
 
   Widget _buildPaymentButton() {

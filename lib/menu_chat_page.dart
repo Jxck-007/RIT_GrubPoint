@@ -68,7 +68,7 @@ class _MenuChatPageState extends State<MenuChatPage> {
     });
 
     try {
-      final response = ChatService.getResponse(userMessage);
+      final response = await ChatService().getResponse(userMessage);
       setState(() {
         _messages.add(ChatMessage(text: response, isUser: false));
         _isLoading = false;

@@ -1,7 +1,6 @@
 import 'package:googleapis/dialogflow/v2.dart' as dialogflow;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 
 class DialogflowService {
   static late dialogflow.DialogflowApi _api;

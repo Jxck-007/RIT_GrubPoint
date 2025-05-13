@@ -1,103 +1,114 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
+import 'package:flutter/material.dart';
 import '../models/menu_item.dart';
+
+class MenuItem {
+  final String id;
+  final String name;
+  final String description;
+  final double price;
+  final String imageUrl;
+  final String category;
+
+  MenuItem({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.price,
+    required this.imageUrl,
+    required this.category,
+  });
+}
 
 class CartItem {
   final MenuItem item;
   int quantity;
 
-  CartItem({required this.item, this.quantity = 1});
+  CartItem({
+    required this.item,
+    this.quantity = 1,
+  });
 
   double get totalPrice => item.price * quantity;
-
-  Map<String, dynamic> toJson() => {
-    'item': item.toJson(),
-    'quantity': quantity,
-  };
-
-  factory CartItem.fromJson(Map<String, dynamic> json) {
-    return CartItem(
-      item: MenuItem.fromJson(json['item']),
-      quantity: json['quantity'],
-    );
-  }
 }
 
 class CartProvider with ChangeNotifier {
-  final List<CartItem> _items = [];
-  static const String _cartKey = 'cart_items';
+  final Map<String, CartItem> _items = {};
 
-  CartProvider() {
-    _loadCart();
-  }
+  Map<String, CartItem> get items => {..._items};
 
-  List<CartItem> get items => [..._items];
+  int get itemCount => _items.length;
 
-  int get itemCount => _items.fold(0, (sum, item) => sum + item.quantity);
-
-  double get totalAmount => _items.fold(0, (sum, item) => sum + item.totalPrice);
-
-  Future<void> _loadCart() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cartJson = prefs.getString(_cartKey);
-      if (cartJson != null) {
-        final List<dynamic> decoded = json.decode(cartJson);
-        _items.clear();
-        _items.addAll(decoded.map((item) => CartItem.fromJson(item)));
-        notifyListeners();
-      }
-    } catch (e) {
-      print('Error loading cart: $e');
-    }
-  }
-
-  Future<void> _saveCart() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final cartJson = json.encode(_items.map((item) => item.toJson()).toList());
-      await prefs.setString(_cartKey, cartJson);
-    } catch (e) {
-      print('Error saving cart: $e');
-    }
+  double get totalAmount {
+    return _items.values.fold(0.0, (sum, item) => sum + item.totalPrice);
   }
 
   void addToCart(MenuItem item) {
-    final existingIndex = _items.indexWhere((cartItem) => cartItem.item.id == item.id);
-    
-    if (existingIndex >= 0) {
-      _items[existingIndex].quantity++;
+    if (_items.containsKey(item.id)) {
+      _items.update(
+        item.id,
+        (existingItem) => CartItem(
+          item: existingItem.item,
+          quantity: existingItem.quantity + 1,
+        ),
+      );
     } else {
-      _items.add(CartItem(item: item));
+      _items.putIfAbsent(
+        item.id,
+        () => CartItem(item: item),
+      );
     }
     notifyListeners();
-    _saveCart();
   }
 
   void removeFromCart(MenuItem item) {
-    _items.removeWhere((cartItem) => cartItem.item.id == item.id);
+    _items.remove(item.id);
     notifyListeners();
-    _saveCart();
   }
 
-  void updateQuantity(MenuItem item, int newQuantity) {
-    if (newQuantity <= 0) {
+  void updateQuantity(MenuItem item, int quantity) {
+    if (!_items.containsKey(item.id)) return;
+
+    if (quantity <= 0) {
       removeFromCart(item);
-      return;
+    } else {
+      _items.update(
+        item.id,
+        (existingItem) => CartItem(
+          item: existingItem.item,
+          quantity: quantity,
+        ),
+      );
     }
-
-    final existingIndex = _items.indexWhere((cartItem) => cartItem.item.id == item.id);
-    if (existingIndex >= 0) {
-      _items[existingIndex].quantity = newQuantity;
-      notifyListeners();
-      _saveCart();
-    }
+    notifyListeners();
   }
 
-  void clearCart() {
+  void clear() {
     _items.clear();
     notifyListeners();
-    _saveCart();
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'items': _items.map((key, value) => MapEntry(key, {
+        'item': value.item.toJson(),
+        'quantity': value.quantity,
+      })),
+    };
+  }
+
+  void loadFromJson(Map<String, dynamic> json) {
+    _items.clear();
+    final items = json['items'] as Map<String, dynamic>;
+    items.forEach((key, value) {
+      _items.putIfAbsent(
+        key,
+        () => CartItem(
+          item: MenuItem.fromJson(value['item']),
+          quantity: value['quantity'],
+        ),
+      );
+    });
+    notifyListeners();
   }
 } 

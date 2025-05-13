@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../models/reservation.dart';
+import '../providers/auth_provider.dart';
 import '../services/firebase_service.dart';
 import '../widgets/responsive_layout.dart';
 import '../widgets/loading_animations.dart';
+import '../widgets/app_drawer.dart';
 
 class ReservationScreen extends StatefulWidget {
   final String restaurantName;
@@ -19,14 +21,17 @@ class ReservationScreen extends StatefulWidget {
 
 class _ReservationScreenState extends State<ReservationScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _guestsController = TextEditingController(text: '2');
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _guestsController = TextEditingController();
   final _specialRequestsController = TextEditingController();
   final _firebaseService = FirebaseService();
 
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  bool _isLoading = false;
-  List<Reservation> _reservations = [];
+  String _selectedTable = 'Table 1';
+  bool _isLoading = true;
+  List<Map<String, dynamic>> _reservations = [];
 
   final List<TimeOfDay> _availableTimeSlots = [
     const TimeOfDay(hour: 11, minute: 0),
@@ -45,19 +50,25 @@ class _ReservationScreenState extends State<ReservationScreen> {
     _loadReservations();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _guestsController.dispose();
+    _specialRequestsController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadReservations() async {
     setState(() => _isLoading = true);
+
     try {
       final user = _firebaseService.getCurrentUser();
       if (user != null) {
         final reservations = await _firebaseService.getUserReservations(user.uid);
-        setState(() {
-          _reservations = reservations;
-          _isLoading = false;
-        });
+        setState(() => _reservations = reservations);
       }
-    } catch (e) {
-      debugPrint('Error loading reservations: $e');
+    } finally {
       setState(() => _isLoading = false);
     }
   }
@@ -77,6 +88,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
     }
   }
 
+  Future<void> _selectTime(BuildContext context) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _selectedTime,
+    );
+    if (picked != null && picked != _selectedTime) {
+      setState(() {
+        _selectedTime = picked;
+      });
+    }
+  }
+
   String _formatDate(DateTime date) {
     return DateFormat('EEEE, MMMM d, y').format(date);
   }
@@ -91,30 +114,30 @@ class _ReservationScreenState extends State<ReservationScreen> {
         final user = _firebaseService.getCurrentUser();
         if (user == null) throw Exception('User not logged in');
 
-        final newReservation = Reservation(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          userId: user.uid,
-          restaurantName: widget.restaurantName,
-          date: _selectedDate,
-          time: _selectedTime,
-          guestCount: int.parse(_guestsController.text),
-          specialRequests: _specialRequestsController.text,
-          status: 'confirmed',
+        final reservationDateTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          _selectedTime.hour,
+          _selectedTime.minute,
         );
 
-        await _firebaseService.saveReservation(newReservation);
-        setState(() {
-          _reservations.add(newReservation);
-          _isLoading = false;
-        });
+        await _firebaseService.saveReservation(
+          user.uid,
+          {
+            'dateTime': reservationDateTime.toIso8601String(),
+            'partySize': int.parse(_guestsController.text),
+            'status': 'pending',
+          },
+        );
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Reservation confirmed!'),
-              backgroundColor: Colors.green,
+              content: Text('Reservation made successfully'),
             ),
           );
+          _loadReservations();
         }
 
         // Reset form
@@ -125,7 +148,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error: ${e.toString()}'),
+              content: Text(e.toString()),
               backgroundColor: Colors.red,
             ),
           );
@@ -141,6 +164,7 @@ class _ReservationScreenState extends State<ReservationScreen> {
       appBar: AppBar(
         title: Text('Reserve - ${widget.restaurantName}'),
       ),
+      drawer: const AppDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -148,138 +172,141 @@ class _ReservationScreenState extends State<ReservationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.restaurantName,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Hours: 6:00 AM - 6:00 PM',
-                        style: TextStyle(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              Text(
+                'Reservation Details',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Select Date',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      TextFormField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Full Name',
+                          prefixIcon: Icon(Icons.person),
+                          border: OutlineInputBorder(),
                         ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your name';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        decoration: const InputDecoration(
+                          labelText: 'Phone Number',
+                          prefixIcon: Icon(Icons.phone),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your phone number';
+                          }
+                          if (value.length < 10) {
+                            return 'Please enter a valid phone number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _guestsController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: 'Number of Guests',
+                          prefixIcon: Icon(Icons.group),
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter number of guests';
+                          }
+                          final guests = int.tryParse(value);
+                          if (guests == null || guests < 1 || guests > 10) {
+                            return 'Please enter a valid number (1-10)';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 16),
                       InkWell(
                         onTap: () => _selectDate(context),
                         child: InputDecorator(
                           decoration: const InputDecoration(
+                            labelText: 'Date',
+                            prefixIcon: Icon(Icons.calendar_today),
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(_formatDate(_selectedDate)),
-                              const Icon(Icons.calendar_today),
-                            ],
+                          child: Text(
+                            '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Select Time',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () => _selectTime(context),
+                        child: InputDecorator(
+                          decoration: const InputDecoration(
+                            labelText: 'Time',
+                            prefixIcon: Icon(Icons.access_time),
+                            border: OutlineInputBorder(),
+                          ),
+                          child: Text(
+                            _selectedTime.format(context),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _availableTimeSlots.map((time) {
-                          final isSelected = _selectedTime.hour == time.hour &&
-                              _selectedTime.minute == time.minute;
-                          return ChoiceChip(
-                            label: Text(time.format(context)),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  _selectedTime = time;
-                                });
-                              }
-                            },
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Guest Information',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _guestsController,
+                      DropdownButtonFormField<String>(
+                        value: _selectedTable,
                         decoration: const InputDecoration(
-                          labelText: 'Number of Guests',
+                          labelText: 'Table',
+                          prefixIcon: Icon(Icons.table_restaurant),
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter number of guests';
+                        items: List.generate(
+                          10,
+                          (index) => DropdownMenuItem(
+                            value: 'Table ${index + 1}',
+                            child: Text('Table ${index + 1}'),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedTable = value;
+                            });
                           }
-                          final number = int.tryParse(value);
-                          if (number == null || number < 1 || number > 10) {
-                            return 'Please enter a number between 1 and 10';
-                          }
-                          return null;
                         },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Special Requests',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
@@ -320,39 +347,62 @@ class _ReservationScreenState extends State<ReservationScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _reservations.length,
-                  itemBuilder: (context, index) {
-                    final reservation = _reservations[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(reservation.restaurantName),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${_formatDate(reservation.date)} at ${reservation.time.format(context)}',
-                            ),
-                            Text('${reservation.guestCount} guests'),
-                            if (reservation.specialRequests.isNotEmpty)
-                              Text('Special requests: ${reservation.specialRequests}'),
-                          ],
-                        ),
-                        trailing: Chip(
-                          label: Text(
-                            reservation.status.toUpperCase(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
+                RefreshIndicator(
+                  onRefresh: _loadReservations,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _reservations.length,
+                    itemBuilder: (context, index) {
+                      final reservation = _reservations[index];
+                      final dateTime = DateTime.parse(reservation['dateTime'] as String);
+                      final status = reservation['status'] as String;
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          title: Text(
+                            DateFormat('EEEE, MMMM d, yyyy').format(dateTime),
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          backgroundColor: Colors.green,
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 8),
+                              Text(
+                                DateFormat('h:mm a').format(dateTime),
+                                style: Theme.of(context).textTheme.bodyLarge,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Party Size: ${reservation['partySize']} people',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(status),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  status.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ],
             ],
@@ -360,5 +410,18 @@ class _ReservationScreenState extends State<ReservationScreen> {
         ),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 } 

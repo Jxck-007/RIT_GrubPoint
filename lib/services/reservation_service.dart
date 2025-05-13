@@ -8,19 +8,16 @@ class ReservationService {
   Future<void> createReservation(DateTime reservationTime) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('User not logged in');
-<<<<<<< HEAD
-    
-    // Check if reservation time is within allowed hours (6:00 AM - 6:00 PM)
-    if (reservationTime.hour < 6 || reservationTime.hour >= 18) {
-      throw Exception('Reservations can only be made between 6:00 AM and 6:00 PM');
+
+    // Validate reservation time
+    if (!await _isValidReservationTime(reservationTime)) {
+      throw Exception('Invalid reservation time. Please select a future time between 6:00 AM and 6:00 PM.');
     }
-    
-    // Check if reservation time is in the past
-    if (reservationTime.isBefore(DateTime.now())) {
-      throw Exception('Cannot make reservations for past times');
+
+    // Check if time slot is available
+    if (!await isTimeSlotAvailable(reservationTime)) {
+      throw Exception('This time slot is full. Please select another time.');
     }
-=======
->>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
 
     await _firestore.collection('reservations').add({
       'userId': user.uid,
@@ -28,6 +25,34 @@ class ReservationService {
       'status': 'pending',
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<bool> _isValidReservationTime(DateTime reservationTime) async {
+    final now = DateTime.now();
+    
+    // Check if time is in the past
+    if (reservationTime.isBefore(now)) {
+      return false;
+    }
+
+    // Check if time is within allowed hours (6:00 AM - 6:00 PM)
+    if (reservationTime.hour < 6 || reservationTime.hour >= 18) {
+      return false;
+    }
+
+    // Check if time is at least 30 minutes in the future
+    final minimumTime = now.add(const Duration(minutes: 30));
+    if (reservationTime.isBefore(minimumTime)) {
+      return false;
+    }
+
+    // Check if time is not more than 7 days in the future
+    final maximumTime = now.add(const Duration(days: 7));
+    if (reservationTime.isAfter(maximumTime)) {
+      return false;
+    }
+
+    return true;
   }
 
   Stream<QuerySnapshot> getUserReservations() {
@@ -49,19 +74,10 @@ class ReservationService {
   }
 
   Future<bool> isTimeSlotAvailable(DateTime reservationTime) async {
-<<<<<<< HEAD
-    // Check if reservation time is within allowed hours (6:00 AM - 6:00 PM)
-    if (reservationTime.hour < 6 || reservationTime.hour >= 18) {
+    if (!await _isValidReservationTime(reservationTime)) {
       return false;
     }
-    
-    // Check if reservation time is in the past
-    if (reservationTime.isBefore(DateTime.now())) {
-      return false;
-    }
-  
-=======
->>>>>>> 8de4c38708317529c31694d7f9ab862e0bb61141
+
     final startOfDay = DateTime(
       reservationTime.year,
       reservationTime.month,
@@ -78,7 +94,6 @@ class ReservationService {
         .get();
 
     // Check if there are too many reservations for the same time slot
-    // You can adjust this number based on your restaurant's capacity
     const maxReservationsPerTimeSlot = 5;
     final timeSlotReservations = reservations.docs.where((doc) {
       final time = (doc.data()['reservationTime'] as Timestamp).toDate();
@@ -87,5 +102,29 @@ class ReservationService {
     }).length;
 
     return timeSlotReservations < maxReservationsPerTimeSlot;
+  }
+
+  Future<List<DateTime>> getAvailableTimeSlots(DateTime date) async {
+    final availableSlots = <DateTime>[];
+    final startHour = 6; // 6 AM
+    final endHour = 18; // 6 PM
+
+    for (var hour = startHour; hour < endHour; hour++) {
+      for (var minute = 0; minute < 60; minute += 30) {
+        final timeSlot = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          hour,
+          minute,
+        );
+
+        if (await isTimeSlotAvailable(timeSlot)) {
+          availableSlots.add(timeSlot);
+        }
+      }
+    }
+
+    return availableSlots;
   }
 } 

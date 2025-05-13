@@ -1,116 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../providers/theme_provider.dart';
-import '../screens/profile_page.dart';
-import '../screens/settings_page.dart';
-import '../screens/login_page.dart';
+import '../providers/auth_provider.dart';
+import '../screens/home_screen.dart';
+import '../screens/cart_screen.dart';
+import '../screens/orders_screen.dart';
+import '../screens/wallet_page.dart';
 import '../screens/reservation_screen.dart';
+import '../screens/profile_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.user;
+    final userData = authProvider.userData;
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          DrawerHeader(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
+          UserAccountsDrawerHeader(
+            accountName: Text(
+              userData?['name'] ?? 'User',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  'assets/LOGO.png',
-                  height: 80,
-                  cacheWidth: 160,
+            accountEmail: Text(user?.email ?? ''),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: Text(
+                (userData?['name'] ?? 'U')[0].toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'RIT GrubPoint',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Campus Food Delivery',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+              ),
+            ),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
           ListTile(
             leading: const Icon(Icons.home),
             title: const Text('Home'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+              Navigator.pushReplacementNamed(context, '/home');
             },
           ),
           ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('Profile'),
+            leading: const Icon(Icons.shopping_cart),
+            title: const Text('Cart'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilePage()),
-              );
+              Navigator.pushNamed(context, '/cart');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.receipt_long),
+            title: const Text('Orders'),
+            onTap: () {
+              Navigator.pushNamed(context, '/orders');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.account_balance_wallet),
+            title: const Text('Wallet'),
+            onTap: () {
+              Navigator.pushNamed(context, '/wallet');
             },
           ),
           ListTile(
             leading: const Icon(Icons.calendar_today),
             title: const Text('Reservations'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ReservationScreen()),
-              );
+              Navigator.pushNamed(context, '/reservations');
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('Profile'),
+            onTap: () {
+              Navigator.pushNamed(context, '/profile');
             },
           ),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text('Settings'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsPage()),
-              );
+              // TODO: Implement settings screen
             },
           ),
           const Divider(),
-          // Theme toggle switch in drawer
-          SwitchListTile(
-            title: const Text('Dark Mode'),
-            secondary: Icon(
-              themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-            ),
-            value: themeProvider.isDarkMode,
-            onChanged: (value) {
-              themeProvider.toggleTheme();
-            },
-          ),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () async {
-              await FirebaseAuth.instance.signOut();
-              if (context.mounted) {
-                Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                  (route) => false,
-                );
+              try {
+                await authProvider.signOut();
+                if (context.mounted) {
+                  Navigator.pushReplacementNamed(context, '/login');
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(e.toString()),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
           ),
